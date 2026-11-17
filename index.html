@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Bé Vui Học – Game cho bé 4 tuổi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;touch-action:manipulation}
+body{font-family:"Baloo 2","Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(180deg,#fff3d6 0%,#ffe0ec 55%,#dff3ff 100%);color:#4a3b2a;overflow-x:hidden}
+#app{min-height:100dvh;display:flex;flex-direction:column;max-width:900px;margin:0 auto;padding:12px 14px calc(14px + env(safe-area-inset-bottom))}
+button{font-family:inherit;cursor:pointer;border:0}
+.splash{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
+.splash .bear{font-size:clamp(110px,34vw,200px);animation:bob 2s ease-in-out infinite}
+.splash h1{margin:0;font-size:clamp(34px,9vw,56px);color:#e4572e;line-height:1.1}
+.start{font-size:clamp(28px,8vw,42px);font-weight:800;color:#fff;background:#43a047;padding:18px 44px;border-radius:999px;box-shadow:0 8px 0 #2e7d32;animation:pulse 1.6s infinite}
+.start:active{transform:translateY(6px);box-shadow:0 2px 0 #2e7d32}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px}
+.title{font-size:clamp(26px,7vw,40px);font-weight:800;color:#e4572e}
+.chip{font-size:22px;font-weight:700;background:#fff;border-radius:999px;padding:6px 16px;box-shadow:0 3px 0 #f0d9b5}
+.ib{width:56px;height:56px;border-radius:50%;background:#fff;font-size:28px;box-shadow:0 4px 0 #f0d9b5}
+.ib:active{transform:translateY(3px);box-shadow:0 1px 0 #f0d9b5}
+.menu{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px;align-content:center}
+.mb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#fff;border-radius:28px;padding:14px 8px;min-height:clamp(120px,22vh,190px);box-shadow:0 8px 0 rgba(0,0,0,.18);font-weight:800}
+.mb:active{transform:translateY(6px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.mb .e{font-size:clamp(52px,15vw,86px);line-height:1.1}
+.mb .t{font-size:clamp(22px,6vw,32px);text-shadow:0 2px 0 rgba(0,0,0,.18);text-align:center;line-height:1.1}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dots{display:flex;gap:10px}
+.d{width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 3px #f3d9a8}
+.d.done{background:#ffb300;box-shadow:none}
+.d.cur{background:#fff;box-shadow:0 0 0 4px #ff7043}
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;padding:6px 4px}
+.bigemoji{font-size:clamp(100px,34vw,200px);line-height:1.05;animation:pop .5s}
+.num-big{font-size:clamp(110px,38vw,210px);font-weight:800;color:#e4572e;line-height:1;animation:pop .5s}
+.scene{animation:pop .5s}
+.scene svg{display:block;width:min(82vw,400px);height:auto;max-height:40vh}
+.cap{font-size:clamp(24px,6.6vw,38px);font-weight:700;color:#5d4630;line-height:1.2;padding:0 6px}
+.cap b{color:#e4572e}
+.items{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:560px}
+.it{position:relative;background:#fff;border-radius:22px;font-size:clamp(50px,15vw,84px);width:clamp(84px,24vw,120px);height:clamp(84px,24vw,120px);display:flex;align-items:center;justify-content:center;box-shadow:0 5px 0 #f0d9b5}
+.it.counted{background:#fff7d6;transform:scale(.94)}
+.it b{position:absolute;right:-6px;top:-8px;background:#e4572e;color:#fff;border-radius:50%;width:38px;height:38px;font-size:24px;display:flex;align-items:center;justify-content:center;animation:pop .3s}
+.opts{display:grid;gap:12px;margin-top:8px}
+.opts.g3{grid-template-columns:repeat(3,1fr)}
+.opts.g2{grid-template-columns:1fr 1fr}
+.opt{background:#fff;border-radius:26px;box-shadow:0 7px 0 #e8cf9f;min-height:clamp(104px,20vh,170px);display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:clamp(54px,16vw,100px);font-weight:800;color:#e4572e;line-height:1.05;transition:transform .15s}
+.opt:active{transform:translateY(5px);box-shadow:0 2px 0 #e8cf9f}
+.opt small{font-size:.5em;color:#8a6d4b}
+.opt .dot{width:clamp(70px,22vw,120px);height:clamp(70px,22vw,120px);border-radius:50%;box-shadow:inset 0 -8px 0 rgba(0,0,0,.12),0 3px 0 rgba(0,0,0,.1)}
+.grp{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;font-size:clamp(20px,6vw,32px);line-height:1.1;padding:6px;font-weight:400}
+.opt.yes{background:#c8f0cf;box-shadow:0 7px 0 #7cc78a;font-size:clamp(34px,10vw,56px);color:#1b6b2a}
+.opt.no{background:#ffd3d0;box-shadow:0 7px 0 #e59a95;font-size:clamp(34px,10vw,56px);color:#a52a22}
+.opt.yes span,.opt.no span{font-size:clamp(70px,22vw,110px);display:block}
+.opt.right{background:#b9f0c2 !important;box-shadow:0 0 0 6px #43a047 !important;animation:pop .5s}
+.opt.shake{animation:shake .4s}
+.opt.dim{opacity:.35;pointer-events:none}
+.opt.hint{animation:pulse 1s infinite;box-shadow:0 0 0 6px #ffb300}
+.end{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center}
+.end .stars{font-size:clamp(40px,12vw,70px);letter-spacing:6px}
+.end .big{font-size:clamp(90px,28vw,160px);animation:bob 1.6s ease-in-out infinite}
+.row{display:flex;gap:14px;margin-top:10px;justify-content:center;min-height:80px}
+.cta{font-size:clamp(34px,10vw,50px);color:#fff;padding:14px 30px;border-radius:26px;font-weight:800;box-shadow:0 7px 0 rgba(0,0,0,.2)}
+.cta:active{transform:translateY(5px);box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.nb{background:#fff;border-radius:22px;aspect-ratio:1;font-size:clamp(34px,11vw,60px);font-weight:800;box-shadow:0 5px 0 #e8cf9f}
+.nb:active{transform:translateY(4px);box-shadow:0 1px 0 #e8cf9f}
+.wrap{position:relative;width:min(88vw,52vh,420px);aspect-ratio:1;margin:4px auto;background:#fff;border-radius:28px;box-shadow:0 7px 0 #e8cf9f;overflow:hidden}
+.wrap canvas{position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}
+.cf{position:fixed;top:-60px;font-size:34px;z-index:99;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(115vh) rotate(360deg)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@media (min-width:700px) and (min-height:600px){#app{padding-top:24px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var S = {sound:true, total:0, mode:null, round:0, stars:0, wrong:0, locked:false, list:[], q:null, counted:0, token:0, wn:1, wdone:true};
+var app = document.getElementById('app');
+var NUM = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín', 'mười'];
+var PRAISE = ['Giỏi quá!', 'Đúng rồi!', 'Tuyệt vời!', 'Con làm đúng rồi!', 'Hay quá!'];
+
+function shuffle(a){ a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function rnd(a){ return a[Math.floor(Math.random() * a.length)]; }
+
+/* ---------- Âm thanh ---------- */
+var ac = null;
+function ctx(){
+  try {
+    if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (ac && ac.state === 'suspended') ac.resume();
+  } catch (e) { ac = null; }
+  return ac;
+}
+function tone(f, t0, d, type, v){
+  var a = ctx(); if (!a || !S.sound) return;
+  try {
+    var o = a.createOscillator(), g = a.createGain(), t = a.currentTime + t0;
+    o.type = type || 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(v || 0.18, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + d + 0.05);
+  } catch (e) {}
+}
+var sfx = {
+  tap: function(){ tone(720, 0, 0.09, 'sine', 0.15); },
+  good: function(){ [523, 659, 784, 1047].forEach(function(f, i){ tone(f, i * 0.09, 0.28); }); },
+  bad: function(){ tone(320, 0, 0.18, 'triangle', 0.2); tone(250, 0.16, 0.28, 'triangle', 0.2); },
+  win: function(){ [523, 659, 784, 659, 784, 1047, 1319].forEach(function(f, i){ tone(f, i * 0.12, 0.32); }); }
+};
+
+var voice = null;
+function loadVoice(){
+  try {
+    if (!('speechSynthesis' in window)) return;
+    var vs = speechSynthesis.getVoices();
+    voice = null;
+    for (var i = 0; i < vs.length; i++) { if (/^vi/i.test(vs[i].lang)) { voice = vs[i]; break; } }
+  } catch (e) {}
+}
+loadVoice();
+try { if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = loadVoice; } catch (e) {}
+
+function say(text, cb){
+  if (!S.sound || !('speechSynthesis' in window)) { if (cb) setTimeout(cb, 900); return; }
+  try {
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'vi-VN'; if (voice) u.voice = voice;
+    u.rate = 0.82; u.pitch = 1.15;
+    if (cb) { u.onend = cb; u.onerror = cb; }
+    window._u = u;
+    speechSynthesis.speak(u);
+  } catch (e) { if (cb) setTimeout(cb, 900); }
+}
+function sayThen(text, cb){
+  var done = false;
+  function fn(){ if (!done) { done = true; cb(); } }
+  say(text, function(){ setTimeout(fn, 600); });
+  setTimeout(fn, 7500);
+}
+function stopSpeech(){ try { speechSynthesis.cancel(); } catch (e) {} }
+
+function confetti(n){
+  var em = ['⭐', '🎉', '✨', '🎈', '🌟'];
+  for (var i = 0; i < (n || 22); i++) {
+    var s = document.createElement('span');
+    s.className = 'cf'; s.textContent = rnd(em);
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.animationDuration = (1.8 + Math.random() * 1.6) + 's';
+    s.style.animationDelay = (Math.random() * 0.4) + 's';
+    document.body.appendChild(s);
+    (function(el){ setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 4000); })(s);
+  }
+}
+
+/* ---------- Hình vẽ minh họa (SVG) ---------- */
+var C1 = '#37474f', C2 = '#ef6c00', C3 = '#1e88e5', C4 = '#d81b60';
+function svgWrap(inner, bg){
+  return '<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="160" rx="18" fill="' + (bg || '#e8f6ff') + '"/>' + inner + '</svg>';
+}
+function limb(p0, pts, w, c){
+  var d = 'M' + p0[0] + ' ' + p0[1];
+  for (var i = 0; i < pts.length; i++) d += ' L' + pts[i][0] + ' ' + pts[i][1];
+  return '<path d="' + d + '" fill="none" stroke="' + c + '" stroke-width="' + w + '" stroke-linecap="round" stroke-linejoin="round"/>';
+}
+function kid(o){
+  var c = o.c || C1, r = o.r || 10, h = o.h, hip = o.hip;
+  var sh = o.sh || [h[0], h[1] + r + 3], lw = o.lw || 5.5, bw = o.bw || 8;
+  var s = limb(sh, [hip], bw, c) + limb(sh, o.la || [], lw, c) + limb(sh, o.ra || [], lw, c) + limb(hip, o.ll || [], lw + 1, c) + limb(hip, o.rl || [], lw + 1, c);
+  s += '<circle cx="' + h[0] + '" cy="' + h[1] + '" r="' + r + '" fill="' + c + '"/>';
+  if (o.mouth) s += '<ellipse cx="' + (h[0] + 2) + '" cy="' + (h[1] + 3) + '" rx="4" ry="5.5" fill="#fff"/>';
+  return s;
+}
+function stand(x, fy, c){
+  return kid({c: c, r: 8, lw: 5, bw: 7, h: [x, fy - 50], hip: [x, fy - 26],
+    la: [[x - 8, fy - 30], [x - 9, fy - 20]], ra: [[x + 8, fy - 30], [x + 9, fy - 20]],
+    ll: [[x - 5, fy - 12], [x - 5, fy]], rl: [[x + 5, fy - 12], [x + 5, fy]]});
+}
+function waterLayer(y, op){
+  return '<rect x="0" y="' + y + '" width="200" height="' + (160 - y) + '" fill="#4fc3f7" opacity="' + (op || 1) + '"/>' +
+         '<path d="M0 ' + y + ' q12 -8 25 0 t25 0 t25 0 t25 0 t25 0 t25 0 t25 0 t25 0" fill="none" stroke="#fff" stroke-width="3" opacity=".85"/>';
+}
+function deckLayer(y, h, w){ return '<rect x="0" y="' + y + '" width="' + (w || 200) + '" height="' + h + '" fill="#ffe0b2"/>'; }
+function stairsBase(){
+  return '<polygon points="0,150 0,128 44,128 44,106 88,106 88,84 132,84 132,62 176,62 176,150" fill="#cfd8dc" stroke="#90a4ae" stroke-width="3"/>';
+}
+function slideBase(){
+  return '<rect x="0" y="140" width="200" height="20" fill="#c5e1a5"/>' +
+    '<g stroke="#8d6e63" stroke-width="4" stroke-linecap="round"><line x1="104" y1="76" x2="104" y2="140"/><line x1="128" y1="76" x2="128" y2="140"/><line x1="104" y1="92" x2="128" y2="92"/><line x1="104" y1="108" x2="128" y2="108"/><line x1="104" y1="124" x2="128" y2="124"/></g>' +
+    '<rect x="92" y="70" width="46" height="7" rx="3" fill="#8d6e63"/>' +
+    '<path d="M94 78 Q50 90 14 132" fill="none" stroke="#fdd835" stroke-width="12" stroke-linecap="round"/>' +
+    '<path d="M94 85 Q50 97 14 139" fill="none" stroke="#f9a825" stroke-width="3" stroke-linecap="round"/>';
+}
+var SPEED = '<path d="M14 48 h24 M8 60 h22 M18 72 h22" stroke="#90a4ae" stroke-width="3" stroke-linecap="round"/>';
+
+var SC = {
+  outlet: function(){
+    return svgWrap('<rect x="0" y="120" width="200" height="40" fill="#ffe0b2"/>' +
+      '<rect x="74" y="22" width="70" height="88" rx="12" fill="#fff" stroke="#b0bec5" stroke-width="4"/>' +
+      '<circle cx="97" cy="52" r="6" fill="#455a64"/><circle cx="121" cy="52" r="6" fill="#455a64"/>' +
+      '<rect x="103" y="76" width="12" height="9" rx="3" fill="#455a64"/>' +
+      '<text x="6" y="100" font-size="58">👉</text><text x="134" y="46" font-size="34">⚡</text>', '#fff3e0');
+  },
+  stairsQueue: function(){
+    return svgWrap(stairsBase() + stand(24, 128, C2) + stand(66, 106, C3) + stand(110, 84, C4), '#e8f6ff');
+  },
+  stairsRush: function(){
+    return svgWrap(stairsBase() +
+      kid({c: C2, h: [48, 76], hip: [38, 112], la: [[36, 98], [28, 108]], ra: [[62, 92], [78, 84]], ll: [[32, 120], [28, 128]], rl: [[46, 120], [54, 128]]}) +
+      kid({c: C3, h: [100, 56], hip: [86, 86], la: [[88, 62], [78, 50]], ra: [[110, 62], [120, 50]], ll: [[80, 96], [78, 106]], rl: [[92, 94], [98, 104]]}) +
+      SPEED + '<text x="134" y="44" font-size="28">❗</text>', '#e8f6ff');
+  },
+  roadLook: function(){
+    return svgWrap('<rect x="0" y="104" width="200" height="56" fill="#546e7a"/><rect x="0" y="92" width="200" height="14" fill="#cfd8dc"/>' +
+      '<path d="M0 136 h200" stroke="#fff" stroke-width="3" stroke-dasharray="14 10"/>' +
+      stand(56, 96, C2) + '<text x="70" y="34" font-size="26">👀</text><text x="112" y="144" font-size="40">🚗</text>', '#e3f6ff');
+  },
+  roadRun: function(){
+    return svgWrap('<rect x="0" y="104" width="200" height="56" fill="#546e7a"/><rect x="0" y="92" width="200" height="14" fill="#cfd8dc"/>' +
+      '<path d="M0 136 h200" stroke="#fff" stroke-width="3" stroke-dasharray="14 10"/>' +
+      kid({c: C2, h: [78, 38], hip: [72, 70], la: [[66, 54], [56, 62]], ra: [[92, 52], [100, 44]], ll: [[62, 82], [52, 92]], rl: [[84, 80], [92, 92]]}) +
+      '<path d="M10 46 h24 M4 58 h22 M14 70 h22" stroke="#90a4ae" stroke-width="3" stroke-linecap="round"/>' +
+      '<text x="112" y="144" font-size="40">🚗</text><text x="132" y="66" font-size="28">❗</text>', '#e3f6ff');
+  },
+  poolAdult: function(){
+    return svgWrap(waterLayer(112) + deckLayer(98, 14) +
+      kid({c: C3, r: 13, lw: 7, bw: 10, h: [64, 22], hip: [64, 66], la: [[52, 52], [48, 66]], ra: [[80, 56], [104, 74]], ll: [[56, 82], [54, 98]], rl: [[72, 82], [74, 98]]}) +
+      kid({c: C2, r: 9, lw: 5, bw: 7, h: [112, 56], hip: [112, 82], la: [[104, 74]], ra: [[120, 76], [122, 82]], ll: [[108, 90], [106, 98]], rl: [[116, 90], [118, 98]]}), '#e3f6ff');
+  },
+  poolFloat: function(){
+    return svgWrap(kid({c: C2, r: 11, h: [100, 44], hip: [100, 96], la: [[86, 56], [76, 68]], ra: [[114, 56], [124, 68]], ll: [[96, 112]], rl: [[104, 112]]}) +
+      waterLayer(84, .9) + '<circle cx="100" cy="88" r="20" fill="none" stroke="#ff7043" stroke-width="9"/>', '#e3f6ff');
+  },
+  poolWalk: function(){
+    return svgWrap(waterLayer(112) + deckLayer(96, 16) + stand(86, 96, C2) + '<text x="124" y="94" font-size="30">🐢</text>', '#e3f6ff');
+  },
+  poolRun: function(){
+    return svgWrap(waterLayer(112) + deckLayer(92, 20) +
+      kid({c: C2, h: [100, 38], hip: [96, 70], la: [[86, 52], [78, 62]], ra: [[114, 48], [124, 38]], ll: [[86, 82], [72, 90]], rl: [[108, 80], [116, 92]]}) +
+      SPEED + '<text x="140" y="60" font-size="28">❗</text>', '#e3f6ff');
+  },
+  poolPush: function(){
+    return svgWrap(waterLayer(110) + '<rect x="140" y="92" width="60" height="30" fill="#4fc3f7"/>' + deckLayer(92, 20, 140) +
+      kid({c: C2, h: [48, 38], hip: [44, 70], la: [[36, 58], [30, 70]], ra: [[66, 52], [88, 56]], ll: [[38, 80], [34, 92]], rl: [[52, 80], [58, 92]]}) +
+      kid({c: C3, h: [112, 36], hip: [104, 68], la: [[100, 44], [92, 32]], ra: [[124, 44], [134, 34]], ll: [[98, 80], [96, 92]], rl: [[112, 80], [122, 90]]}) +
+      '<circle cx="164" cy="86" r="4" fill="#4fc3f7"/><circle cx="176" cy="78" r="3" fill="#4fc3f7"/><text x="140" y="30" font-size="26">❗</text>', '#e3f6ff');
+  },
+  poolAlone: function(){
+    return svgWrap(waterLayer(112) + deckLayer(94, 18) + stand(104, 94, C2) + '<text x="124" y="56" font-size="30">😟</text><text x="30" y="76" font-size="40">❓</text>', '#e3f6ff');
+  },
+  poolBomb: function(){
+    return svgWrap(waterLayer(118) +
+      kid({c: C2, h: [100, 32], hip: [102, 64], la: [[90, 58], [104, 76]], ra: [[114, 54], [108, 78]], ll: [[116, 70], [106, 86]], rl: [[106, 72], [96, 86]]}) +
+      '<circle cx="62" cy="110" r="5" fill="#fff"/><circle cx="140" cy="108" r="6" fill="#fff"/><circle cx="76" cy="98" r="4" fill="#fff"/><circle cx="128" cy="96" r="4" fill="#fff"/>', '#e3f6ff');
+  },
+  poolDunk: function(){
+    return svgWrap(
+      kid({c: C2, r: 10, h: [58, 38], hip: [58, 90], la: [[46, 62], [40, 76]], ra: [[82, 54], [118, 64]], ll: [[52, 106]], rl: [[64, 106]]}) +
+      kid({c: C3, r: 9, h: [128, 68], hip: [128, 112], la: [[116, 78], [110, 62]], ra: [[140, 78], [146, 62]], ll: [[122, 124]], rl: [[134, 124]]}) +
+      waterLayer(84, .85) + '<text x="148" y="40" font-size="26">❗</text>', '#e3f6ff');
+  },
+  poolDive: function(){
+    return svgWrap(
+      kid({c: C2, r: 9, sh: [114, 74], h: [124, 84], hip: [86, 50], la: [[130, 92], [138, 104]], ra: [[120, 94], [126, 106]], ll: [[74, 40], [62, 32]], rl: [[80, 34], [70, 24]]}) +
+      waterLayer(110) + '<circle cx="146" cy="104" r="5" fill="#fff"/><circle cx="156" cy="98" r="4" fill="#fff"/><text x="152" y="52" font-size="26">❗</text>', '#e3f6ff');
+  },
+  poolShoulders: function(){
+    return svgWrap(
+      kid({c: C2, r: 10, h: [100, 56], hip: [100, 94], la: [[88, 72], [84, 88]], ra: [[112, 72], [116, 88]], ll: [[94, 112]], rl: [[106, 112]]}) +
+      kid({c: C3, r: 8, h: [100, 18], hip: [100, 46], la: [[88, 26], [78, 12]], ra: [[112, 26], [122, 12]], ll: [[90, 52], [86, 62]], rl: [[110, 52], [114, 62]]}) +
+      waterLayer(102, .85), '#e3f6ff');
+  },
+  poolShout: function(){
+    return svgWrap(
+      kid({c: C2, r: 11, mouth: true, h: [100, 54], hip: [100, 100], la: [[86, 62], [76, 44]], ra: [[114, 62], [124, 44]], ll: [[96, 114]], rl: [[104, 114]]}) +
+      waterLayer(88, .88) + '<text x="136" y="48" font-size="30" font-weight="bold" fill="#e53935">!!</text>' +
+      '<path d="M124 52 q8 6 0 14 M130 46 q14 12 0 26" stroke="#e53935" fill="none" stroke-width="3" stroke-linecap="round"/>', '#e3f6ff');
+  },
+  slideQueue: function(){
+    return svgWrap(slideBase() + stand(142, 140, C2) + stand(163, 140, C3) + stand(184, 140, C4), '#e8f6ff');
+  },
+  slideSit: function(){
+    return svgWrap(slideBase() +
+      kid({c: C2, h: [64, 62], hip: [56, 90], la: [[76, 80], [80, 90]], ra: [[70, 82], [78, 94]], ll: [[44, 94], [32, 108]], rl: [[46, 88], [34, 102]]}), '#e8f6ff');
+  },
+  slideClimb: function(){
+    return svgWrap(slideBase() +
+      kid({c: C2, h: [66, 76], hip: [42, 96], la: [[78, 86], [88, 82]], ra: [[72, 90], [84, 90]], ll: [[36, 108], [26, 114]], rl: [[44, 110], [36, 122]]}) +
+      '<text x="136" y="40" font-size="26">❗</text>', '#e8f6ff');
+  },
+  slideShove: function(){
+    return svgWrap(slideBase() +
+      kid({c: C3, h: [124, 20], hip: [120, 46], la: [[112, 36], [106, 44]], ra: [[110, 30], [98, 30]], ll: [[114, 60], [112, 70]], rl: [[126, 60], [130, 70]]}) +
+      kid({c: C2, h: [92, 24], hip: [100, 48], la: [[84, 30], [76, 20]], ra: [[108, 30], [114, 22]], ll: [[96, 60], [94, 70]], rl: [[106, 60], [108, 70]]}) +
+      '<text x="140" y="40" font-size="26">❗</text>', '#e8f6ff');
+  },
+  wcSlip: function(){
+    return svgWrap('<rect x="0" y="104" width="200" height="56" fill="#b0bec5"/>' +
+      '<ellipse cx="100" cy="112" rx="50" ry="8" fill="#81d4fa" opacity=".85"/>' +
+      kid({c: C2, h: [90, 36], hip: [96, 72], la: [[80, 52], [70, 40]], ra: [[106, 56], [120, 46]], ll: [[84, 88], [72, 102]], rl: [[112, 84], [134, 98]]}) +
+      '<text x="140" y="48" font-size="28">❗</text>', '#e0f7fa');
+  }
+};
+
+/* ---------- Màn hình ---------- */
+function splash(){
+  app.innerHTML =
+    '<div class="splash">' +
+      '<div class="bear">🐻</div>' +
+      '<h1>Bé Vui Học</h1>' +
+      '<button class="start" onclick="begin()">▶ Chơi nào!</button>' +
+    '</div>';
+}
+function begin(){
+  ctx(); sfx.tap(); loadVoice();
+  home();
+  say('Chào con! Mình cùng chơi nhé!');
+}
+
+var MODES = [
+  {id:'letters', e:'🔤', t:'Chữ cái', c:'#ff7043'},
+  {id:'count',   e:'🔢', t:'Đếm số', c:'#29b6f6'},
+  {id:'color',   e:'🎨', t:'Màu sắc', c:'#ab47bc'},
+  {id:'things',  e:'🪥', t:'Đồ dùng', c:'#43a047'},
+  {id:'numbers', e:'🔟', t:'Đố số', c:'#26a69a'},
+  {id:'rules',   e:'👍', t:'Việc nên – không nên làm', c:'#f9a825'}
+];
+
+function home(){
+  S.mode = null; S.token++; S.wdone = true; stopSpeech();
+  var h = '<div class="bar"><div class="chip">⭐ ' + S.total + '</div><div class="title">Bé Vui Học</div>' +
+          '<button class="ib" onclick="toggleSound()">' + (S.sound ? '🔊' : '🔇') + '</button></div><div class="menu">';
+  MODES.forEach(function(m){
+    h += '<button class="mb" style="background:' + m.c + '" onclick="openMode(\'' + m.id + '\')">' +
+         '<span class="e">' + m.e + '</span><span class="t">' + m.t + '</span></button>';
+  });
+  h += '</div>';
+  app.innerHTML = h;
+}
+function openMode(id){
+  ctx(); sfx.tap();
+  if (id === 'numbers') numMenu(); else start(id);
+}
+function toggleSound(){
+  S.sound = !S.sound; if (!S.sound) stopSpeech(); else sfx.tap();
+  home();
+}
+
+/* ---------- Dữ liệu ---------- */
+var LETTERS = [
+  {l:'B', w:'bóng', e:'⚽', s:'bờ'}, {l:'C', w:'cá', e:'🐟', s:'cờ'}, {l:'D', w:'dê', e:'🐐', s:'dờ'},
+  {l:'Đ', w:'đèn', e:'💡', s:'đờ'}, {l:'G', w:'gà', e:'🐔', s:'gờ'}, {l:'H', w:'hoa', e:'🌸', s:'hờ'},
+  {l:'K', w:'kẹo', e:'🍬', s:'ca'}, {l:'L', w:'lá', e:'🍃', s:'lờ'}, {l:'M', w:'mèo', e:'🐱', s:'mờ'},
+  {l:'N', w:'nho', e:'🍇', s:'nờ'}, {l:'T', w:'táo', e:'🍎', s:'tờ'}, {l:'V', w:'voi', e:'🐘', s:'vờ'},
+  {l:'X', w:'xe', e:'🚗', s:'xờ'}, {l:'Ê', w:'ếch', e:'🐸', s:'ê'}, {l:'O', w:'ong', e:'🐝', s:'o'}
+];
+var COUNT_ITEMS = [
+  {e:'🍎', n:'quả táo'}, {e:'⭐', n:'ngôi sao'}, {e:'🐟', n:'con cá'}, {e:'🎈', n:'quả bóng bay'},
+  {e:'🐥', n:'con gà con'}, {e:'🌸', n:'bông hoa'}, {e:'🚗', n:'chiếc xe'}, {e:'🍪', n:'cái bánh'}
+];
+var COLORS = [
+  {k:'đỏ', c:'#e53935'}, {k:'xanh dương', c:'#1e88e5'}, {k:'vàng', c:'#fdd835'}, {k:'xanh lá', c:'#43a047'},
+  {k:'cam', c:'#fb8c00'}, {k:'tím', c:'#8e24aa'}, {k:'hồng', c:'#f48fb1'}, {k:'nâu', c:'#795548'}
+];
+var COLOR_OBJ = [
+  {e:'🍎', n:'quả táo', c:'đỏ'}, {e:'🍌', n:'quả chuối', c:'vàng'}, {e:'🥕', n:'củ cà rốt', c:'cam'},
+  {e:'🍇', n:'chùm nho', c:'tím'}, {e:'🍃', n:'chiếc lá', c:'xanh lá'}, {e:'🐳', n:'con cá voi', c:'xanh dương'},
+  {e:'🍫', n:'thanh sô cô la', c:'nâu'}, {e:'🌸', n:'bông hoa', c:'hồng'}
+];
+var THINGS = [
+  {e:'🪥', n:'bàn chải đánh răng'}, {e:'🥄', n:'cái muỗng'}, {e:'🩴', n:'đôi dép'}, {e:'🧢', n:'cái mũ'},
+  {e:'🥛', n:'cái ly'}, {e:'🪑', n:'cái ghế'}, {e:'📖', n:'quyển sách'}, {e:'✏️', n:'cây bút chì'},
+  {e:'✂️', n:'cái kéo'}, {e:'💡', n:'cái đèn'}, {e:'📺', n:'cái ti vi'}, {e:'⏰', n:'cái đồng hồ'},
+  {e:'🔑', n:'chìa khóa'}, {e:'🚲', n:'xe đạp'}, {e:'🛏️', n:'cái giường'}, {e:'☂️', n:'cái ô'}
+];
+var RULES = [
+  /* ----- Nên ----- */
+  {e:'🧼', t:'Con rửa tay trước khi ăn cơm.', ok:true, why:'Rửa tay giúp con sạch sẽ và khỏe mạnh.'},
+  {e:'🪥', t:'Con đánh răng trước khi đi ngủ.', ok:true, why:'Đánh răng giúp răng con chắc khỏe.'},
+  {e:'🙏', t:'Con nói cảm ơn khi được tặng quà.', ok:true, why:'Nói cảm ơn là con ngoan, lễ phép.'},
+  {e:'🧸', t:'Con cho bạn chơi chung đồ chơi.', ok:true, why:'Biết chia sẻ, các bạn sẽ yêu quý con.'},
+  {e:'⛑️', t:'Con đội mũ bảo hiểm khi đi xe máy.', ok:true, why:'Mũ bảo hiểm giúp bảo vệ đầu của con.'},
+  {e:'🧺', t:'Con cất đồ chơi gọn gàng sau khi chơi.', ok:true, why:'Nhà cửa gọn gàng thật đẹp.'},
+  {e:'🥦', t:'Con ăn rau xanh mỗi ngày.', ok:true, why:'Rau xanh giúp con mau lớn.'},
+  {e:'👵', t:'Con chào ông bà khi ngủ dậy.', ok:true, why:'Con biết chào hỏi, con thật lễ phép.'},
+  {e:'🥄🍚', t:'Con tự xúc cơm ăn.', ok:true, why:'Con tự ăn thật giỏi, con lớn rồi nè.'},
+  {svg:'stairsQueue', t:'Con xếp hàng khi đi cầu thang.', ok:true, why:'Xếp hàng đi từng bạn một, con sẽ không bị té.'},
+  {svg:'roadLook', t:'Con quan sát xe cộ khi ra đường.', ok:true, why:'Con nhìn kỹ xe cộ rồi mới đi, và nắm tay người lớn nhé.'},
+  {svg:'poolAdult', t:'Con xuống hồ bơi khi có người lớn bên cạnh.', ok:true, why:'Có người lớn bên cạnh con sẽ an toàn hơn.'},
+  {svg:'poolFloat', t:'Con mặc áo phao khi xuống nước.', ok:true, why:'Áo phao giúp con nổi và an toàn.'},
+  {svg:'poolWalk', t:'Con đi bộ chậm quanh hồ bơi.', ok:true, why:'Sàn hồ bơi rất trơn, đi chậm sẽ không bị té.'},
+  {svg:'slideQueue', t:'Con xếp hàng chờ đến lượt trượt cầu tuột.', ok:true, why:'Chờ đến lượt, bạn nào cũng được chơi vui.'},
+  {svg:'slideSit', t:'Con trượt ngồi, chân xuống trước.', ok:true, why:'Ngồi trượt chân xuống trước sẽ an toàn.'},
+  {e:'🙋🚽', t:'Con nói với người lớn khi muốn đi vệ sinh.', ok:true, why:'Nói với người lớn để con được giúp đỡ nhé.'},
+  {e:'🚽', t:'Con đi vệ sinh đúng chỗ.', ok:true, why:'Đi đúng chỗ thì nhà cửa luôn sạch sẽ.'},
+  {e:'🚽💦', t:'Con xả nước sau khi đi vệ sinh.', ok:true, why:'Xả nước để bồn cầu luôn sạch sẽ.'},
+  {e:'🧼🚰', t:'Con rửa tay bằng xà phòng sau khi đi vệ sinh.', ok:true, why:'Rửa tay bằng xà phòng giúp con diệt vi trùng.'},
+  /* ----- Không nên ----- */
+  {svg:'outlet', t:'Con chạm tay vào ổ điện.', ok:false, why:'Ổ điện rất nguy hiểm. Con không chạm vào nhé.'},
+  {e:'🔥', t:'Con nghịch lửa.', ok:false, why:'Lửa làm bỏng tay. Con không nghịch lửa nhé.'},
+  {svg:'roadRun', t:'Con chạy ra đường mà không quan sát.', ok:false, why:'Ngoài đường có nhiều xe. Con phải nhìn kỹ và nắm tay người lớn nhé.'},
+  {e:'🧔🍭', t:'Con nhận kẹo và đi theo người lạ.', ok:false, why:'Con không đi theo người lạ. Con hãy chạy về với ba mẹ nhé.'},
+  {e:'🗑️', t:'Con vứt rác ra sàn nhà.', ok:false, why:'Con bỏ rác vào thùng rác nhé.'},
+  {e:'🍭', t:'Con ăn kẹo trước khi đi ngủ.', ok:false, why:'Ăn kẹo trước khi ngủ sẽ bị sâu răng đó con.'},
+  {e:'😠', t:'Con đánh bạn.', ok:false, why:'Đánh bạn làm bạn đau. Con hãy nói nhẹ nhàng với bạn nhé.'},
+  {e:'🔪✂️', t:'Con cầm dao kéo.', ok:false, why:'Dao kéo rất sắc, con không cầm nhé.'},
+  {e:'🍚👩', t:'Con ngồi chờ người lớn đút cơm mỗi bữa.', ok:false, why:'Con lớn rồi, con tự xúc cơm ăn nhé.'},
+  {e:'📱🍚', t:'Con vừa ăn vừa chạy chơi hoặc xem điện thoại.', ok:false, why:'Con ngồi ăn cho ngoan, để nhai kỹ và không bị nghẹn.'},
+  {svg:'stairsRush', t:'Con chạy, chen lấn trên cầu thang.', ok:false, why:'Chạy và chen lấn dễ bị té. Con đi chậm và xếp hàng nhé.'},
+  {svg:'poolRun', t:'Con chạy nhảy quanh hồ bơi.', ok:false, why:'Sàn hồ bơi rất trơn, chạy nhảy sẽ bị té.'},
+  {svg:'poolPush', t:'Con xô đẩy bạn khi ở hồ bơi.', ok:false, why:'Xô đẩy làm bạn bị ngã và sặc nước.'},
+  {svg:'poolAlone', t:'Con xuống hồ bơi một mình.', ok:false, why:'Con luôn phải có người lớn bên cạnh nhé.'},
+  {svg:'poolBomb', t:'Con nhảy "bom" xuống nước.', ok:false, why:'Nhảy bom làm con và bạn bị đau.'},
+  {svg:'poolDunk', t:'Con dìm đầu bạn xuống nước.', ok:false, why:'Dìm đầu làm bạn bị sặc nước, rất nguy hiểm.'},
+  {svg:'poolDive', t:'Con nhảy chúi đầu xuống nước.', ok:false, why:'Nhảy chúi đầu có thể đập đầu xuống đáy hồ.'},
+  {svg:'poolShoulders', t:'Con đứng lên vai bạn, nhào lộn trên người bạn.', ok:false, why:'Dễ bị té ngã và làm bạn đau.'},
+  {svg:'poolShout', t:'Con la hét, kêu thét lớn khi chơi.', ok:false, why:'Nếu con la giả vờ, cô cứu hộ sẽ không biết lúc nào con thật sự cần giúp.'},
+  {svg:'slideClimb', t:'Con trèo ngược lên cầu tuột.', ok:false, why:'Trèo ngược lên dễ va vào bạn đang trượt xuống.'},
+  {svg:'slideShove', t:'Con chen lấn, đẩy bạn khi chơi cầu tuột.', ok:false, why:'Chen lấn, xô đẩy làm bạn bị té. Con chờ đến lượt nhé.'},
+  {e:'😣🚽', t:'Con nhịn đi vệ sinh.', ok:false, why:'Con buồn đi thì nói ngay với người lớn nhé.'},
+  {svg:'wcSlip', t:'Con chạy nhảy trong nhà vệ sinh.', ok:false, why:'Sàn nhà vệ sinh ướt, chạy nhảy dễ trượt té.'},
+  {e:'🧸🚽', t:'Con bỏ đồ chơi, giấy hoặc đồ vật vào bồn cầu.', ok:false, why:'Đồ vật làm tắc bồn cầu. Con đừng bỏ vào nhé.'},
+  {e:'🤲🦠', t:'Con không rửa tay sau khi đi vệ sinh.', ok:false, why:'Không rửa tay sẽ có vi trùng, dễ bị đau bụng.'}
+];
+
+/* ---------- Tạo câu hỏi ---------- */
+function genLetters(){
+  return shuffle(LETTERS).slice(0, 5).map(function(it){
+    var pool = LETTERS.filter(function(x){
+      if (x.l === it.l) return false;
+      if ((it.l === 'C' && x.l === 'K') || (it.l === 'K' && x.l === 'C')) return false;
+      return true;
+    });
+    var opts = shuffle([it].concat(shuffle(pool).slice(0, 2))).map(function(x){
+      return {h: x.l + ' <small>' + x.l.toLowerCase() + '</small>', ok: x.l === it.l};
+    });
+    return {
+      kind: 'g3',
+      say: it.w + '. ' + it.w + ' bắt đầu bằng chữ gì?',
+      visual: '<div class="bigemoji">' + it.e + '</div><div class="cap"><b>' + it.w + '</b></div>',
+      opts: opts,
+      okSay: it.w + ' bắt đầu bằng chữ ' + it.s + '.'
+    };
+  });
+}
+function genCount(){
+  var ns = shuffle([1, 2, 3, 4, 5, 6]).slice(0, 5);
+  return ns.map(function(n){
+    var it = rnd(COUNT_ITEMS);
+    var others = shuffle([1, 2, 3, 4, 5, 6].filter(function(x){ return x !== n; })).slice(0, 2);
+    var opts = shuffle([n].concat(others)).map(function(x){ return {h: String(x), ok: x === n}; });
+    var items = '';
+    for (var i = 0; i < n; i++) items += '<button class="it" onclick="cnt(this)">' + it.e + '</button>';
+    return {
+      kind: 'g3',
+      say: 'Có bao nhiêu ' + it.n + '? Con chạm vào từng hình để đếm nhé.',
+      visual: '<div class="items">' + items + '</div><div class="cap">Có bao nhiêu <b>' + it.n + '</b>?</div>',
+      opts: opts,
+      okSay: 'Có ' + NUM[n] + ' ' + it.n + '.'
+    };
+  });
+}
+function colorOpts(target){
+  var others = shuffle(COLORS.filter(function(c){ return c.k !== target.k; })).slice(0, 2);
+  return shuffle([target].concat(others)).map(function(c){
+    return {h: '<span class="dot" style="background:' + c.c + '"></span>', ok: c.k === target.k};
+  });
+}
+function colorByName(k){ for (var i = 0; i < COLORS.length; i++) if (COLORS[i].k === k) return COLORS[i]; return COLORS[0]; }
+function genColor(){
+  var objs = shuffle(COLOR_OBJ);
+  var cols = shuffle(COLORS);
+  var out = [];
+  for (var i = 0; i < 5; i++) {
+    if (i % 2 === 0) {
+      var c = cols[i];
+      out.push({
+        kind: 'g3',
+        say: 'Con chạm vào màu ' + c.k + '.',
+        visual: '<div class="bigemoji">🎨</div><div class="cap">Màu <b>' + c.k + '</b></div>',
+        opts: colorOpts(c),
+        okSay: 'Đây là màu ' + c.k + '.'
+      });
+    } else {
+      var o = objs[i];
+      var oc = colorByName(o.c);
+      out.push({
+        kind: 'g3',
+        say: o.n + ' màu gì?',
+        visual: '<div class="bigemoji">' + o.e + '</div><div class="cap">' + o.n + ' màu gì?</div>',
+        opts: colorOpts(oc),
+        okSay: o.n + ' màu ' + o.c + '.'
+      });
+    }
+  }
+  return out;
+}
+function genThings(){
+  return shuffle(THINGS).slice(0, 5).map(function(it){
+    var others = shuffle(THINGS.filter(function(x){ return x.n !== it.n; })).slice(0, 2);
+    var opts = shuffle([it].concat(others)).map(function(x){ return {h: x.e, ok: x.n === it.n}; });
+    return {
+      kind: 'g3',
+      say: 'Cái nào là ' + it.n + '?',
+      visual: '<div class="bigemoji">👀</div><div class="cap">Đâu là <b>' + it.n + '</b>?</div>',
+      opts: opts,
+      okSay: 'Đây là ' + it.n + '.'
+    };
+  });
+}
+function genRules(){
+  var yes = shuffle(RULES.filter(function(r){ return r.ok; }));
+  var no = shuffle(RULES.filter(function(r){ return !r.ok; }));
+  var pick = Math.random() < 0.5 ? yes.slice(0, 3).concat(no.slice(0, 2)) : yes.slice(0, 2).concat(no.slice(0, 3));
+  return shuffle(pick).map(function(r){
+    var vis = r.svg
+      ? '<div class="scene">' + SC[r.svg]() + '</div>'
+      : '<div class="bigemoji" style="font-size:clamp(90px,28vw,170px)">' + r.e + '</div>';
+    return {
+      kind: 'g2',
+      say: r.t + ' Nên hay không nên?',
+      visual: vis + '<div class="cap">' + r.t + '</div>',
+      opts: [
+        {h: '<span>👍</span>Nên', ok: r.ok, cls: 'yes'},
+        {h: '<span>🙅</span>Không nên', ok: !r.ok, cls: 'no'}
+      ],
+      okSay: r.why
+    };
+  });
+}
+function genNumRec(){
+  var all = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  var EM = ['🍎', '⭐', '🐟', '🎈', '🐥', '🌸', '🍪', '🚗'];
+  var ns = shuffle(all).slice(0, 5);
+  return ns.map(function(n, i){
+    if (i % 2 === 0) {
+      var others = shuffle(all.filter(function(x){ return x !== n; })).slice(0, 2);
+      return {
+        kind: 'g3',
+        say: 'Con chạm vào số ' + NUM[n] + '.',
+        visual: '<div class="bigemoji">👂</div><div class="cap">Nghe và chọn số nhé</div>',
+        opts: shuffle([n].concat(others)).map(function(x){ return {h: String(x), ok: x === n}; }),
+        okSay: 'Đây là số ' + NUM[n] + '.'
+      };
+    }
+    var e = rnd(EM);
+    var near = [];
+    [-2, -1, 1, 2].forEach(function(d){ var k = n + d; if (k >= 1 && k <= 10) near.push(k); });
+    var oth = shuffle(near).slice(0, 2);
+    if (oth.length < 2) {
+      var rest = shuffle(all.filter(function(x){ return x !== n && oth.indexOf(x) < 0; }));
+      oth = oth.concat(rest.slice(0, 2 - oth.length));
+    }
+    return {
+      kind: 'g3',
+      say: 'Số ' + NUM[n] + '. Con chọn nhóm có ' + NUM[n] + ' hình nào?',
+      visual: '<div class="num-big">' + n + '</div><div class="cap">Số <b>' + NUM[n] + '</b></div>',
+      opts: shuffle([n].concat(oth)).map(function(k){
+        var g = ''; for (var j = 0; j < k; j++) g += '<span>' + e + '</span>';
+        return {h: '<div class="grp">' + g + '</div>', ok: k === n};
+      }),
+      okSay: 'Đúng rồi! Số ' + NUM[n] + ' có ' + NUM[n] + ' hình.'
+    };
+  });
+}
+
+/* ---------- Vòng chơi ---------- */
+function start(id){
+  ctx(); sfx.tap();
+  S.mode = id; S.round = 0; S.stars = 0; S.token++;
+  var g = {letters: genLetters, count: genCount, color: genColor, things: genThings, rules: genRules, numrec: genNumRec}[id];
+  S.list = g();
+  nextQ();
+}
+function nextQ(){
+  if (S.round >= S.list.length) return finish();
+  var q = S.list[S.round];
+  S.q = q; S.wrong = 0; S.locked = false; S.counted = 0;
+  var dots = '';
+  for (var r = 0; r < S.list.length; r++) dots += '<span class="d' + (r < S.round ? ' done' : (r === S.round ? ' cur' : '')) + '"></span>';
+  var opts = '';
+  q.opts.forEach(function(o, i){
+    opts += '<button class="opt ' + (o.cls || '') + '" onclick="pick(' + i + ')">' + o.h + '</button>';
+  });
+  var back = S.mode === 'numrec' ? 'numMenu()' : 'home()';
+  app.innerHTML =
+    '<div class="top"><button class="ib" onclick="' + back + '">' + (S.mode === 'numrec' ? '⬅️' : '🏠') + '</button><div class="dots">' + dots + '</div>' +
+    '<button class="ib" onclick="replay()">🔊</button></div>' +
+    '<div class="stage">' + q.visual + '</div>' +
+    '<div class="opts ' + q.kind + '">' + opts + '</div>';
+  var tk = S.token;
+  setTimeout(function(){ if (tk === S.token && S.q === q && !S.locked) say(q.say); }, 250);
+}
+function replay(){
+  if (S.locked || !S.q) return;
+  sfx.tap(); say(S.q.say);
+}
+function cnt(el){
+  if (S.locked || el.getAttribute('data-d')) return;
+  el.setAttribute('data-d', '1');
+  S.counted++;
+  el.classList.add('counted');
+  el.insertAdjacentHTML('beforeend', '<b>' + S.counted + '</b>');
+  sfx.tap();
+  say(NUM[S.counted] || String(S.counted));
+}
+function pick(i){
+  if (S.locked) return;
+  ctx();
+  var q = S.q, o = q.opts[i];
+  var el = document.querySelectorAll('.opt')[i];
+  if (o.ok) {
+    S.locked = true; S.stars++;
+    el.classList.add('right');
+    sfx.good(); confetti(14);
+    var tk = S.token;
+    sayThen(rnd(PRAISE) + ' ' + q.okSay, function(){
+      if (tk !== S.token) return;
+      S.round++; nextQ();
+    });
+  } else {
+    S.wrong++;
+    sfx.bad();
+    el.classList.add('shake');
+    setTimeout(function(){ el.classList.remove('shake'); el.classList.add('dim'); }, 420);
+    say('Chưa đúng. Con thử lại nhé!');
+    if (S.wrong >= 2) {
+      var btns = document.querySelectorAll('.opt');
+      q.opts.forEach(function(x, k){ if (x.ok) btns[k].classList.add('hint'); });
+    }
+  }
+}
+function finish(){
+  S.total += S.stars; S.q = null; S.locked = true;
+  var stars = '';
+  for (var i = 0; i < S.list.length; i++) stars += i < S.stars ? '⭐' : '☆';
+  var backBtn = S.mode === 'numrec' ? '<button class="cta" style="background:#ff7043" onclick="numMenu()">⬅️</button>' : '<button class="cta" style="background:#ff7043" onclick="home()">🏠</button>';
+  app.innerHTML =
+    '<div class="end">' +
+      '<div class="big">🏆</div>' +
+      '<div class="title">Giỏi quá!</div>' +
+      '<div class="stars">' + stars + '</div>' +
+      '<div class="row">' +
+        '<button class="cta" style="background:#43a047" onclick="start(\'' + S.mode + '\')">🔁</button>' + backBtn +
+      '</div>' +
+    '</div>';
+  sfx.win(); confetti(40);
+  setTimeout(function(){ say('Giỏi quá! Con được ' + S.stars + ' ngôi sao!'); }, 900);
+}
+
+/* ---------- Đố số: menu, tập viết số ---------- */
+function numMenu(){
+  S.mode = null; S.token++; S.wdone = true; stopSpeech();
+  app.innerHTML =
+    '<div class="bar"><button class="ib" onclick="home()">🏠</button><div class="title">Đố số</div><span style="width:56px"></span></div>' +
+    '<div class="menu" style="grid-template-columns:1fr">' +
+      '<button class="mb" style="background:#26a69a" onclick="start(\'numrec\')"><span class="e">👀</span><span class="t">Nhận số</span></button>' +
+      '<button class="mb" style="background:#7e57c2" onclick="writePick()"><span class="e">✍️</span><span class="t">Tập viết số</span></button>' +
+    '</div>';
+}
+function writePick(){
+  S.mode = null; S.token++; S.wdone = true; stopSpeech(); sfx.tap();
+  var cols = ['#ff7043', '#29b6f6', '#ab47bc', '#43a047', '#f9a825'];
+  var g = '';
+  for (var i = 1; i <= 10; i++) g += '<button class="nb" style="color:' + cols[(i - 1) % 5] + '" onclick="writeStart(' + i + ')">' + i + '</button>';
+  app.innerHTML =
+    '<div class="bar"><button class="ib" onclick="numMenu()">⬅️</button><div class="title">Chọn số để viết</div><span style="width:56px"></span></div>' +
+    '<div class="menu" style="grid-template-columns:repeat(5,1fr);gap:10px">' + g + '</div>';
+}
+
+function arc(cx, cy, rx, ry, a0, a1){
+  var p = [], n = 26;
+  for (var i = 0; i <= n; i++) {
+    var a = (a0 + (a1 - a0) * i / n) * Math.PI / 180;
+    p.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]);
+  }
+  return p;
+}
+var STROKES = {
+  1: [[[.36, .28], [.56, .10], [.56, .90]]],
+  2: [arc(.5, .32, .25, .22, 190, 400).concat([[.26, .88], [.78, .88]])],
+  3: [arc(.48, .30, .22, .20, 200, 450).concat(arc(.48, .68, .26, .22, 270, 520))],
+  4: [[[.55, .10], [.22, .62], [.80, .62]], [[.66, .10], [.66, .90]]],
+  5: [[[.74, .12], [.33, .12], [.33, .46]].concat(arc(.5, .64, .26, .24, 230, 520))],
+  6: [[[.68, .12], [.46, .20], [.30, .42], [.26, .66]].concat(arc(.5, .68, .24, .22, 180, -180))],
+  7: [[[.24, .12], [.76, .12], [.40, .90]]],
+  8: [arc(.5, .30, .2, .18, -60, -270).concat(arc(.5, .68, .25, .22, -90, 270))],
+  9: [arc(.5, .32, .24, .21, 0, -360).concat([[.74, .32], [.70, .62], [.5, .88], [.34, .82]])],
+  10: [[[.12, .30], [.22, .14], [.22, .88]], arc(.62, .5, .17, .36, -90, -450)]
+};
+var CW = 400, PAD = 40, SZ = 320;
+var need = [], got = 0;
+function px(p){ return [PAD + p[0] * SZ, PAD + p[1] * SZ]; }
+
+function writeStart(n){
+  S.mode = 'write'; S.wn = n; S.token++; S.wdone = false;
+  app.innerHTML =
+    '<div class="top"><button class="ib" onclick="writePick()">⬅️</button><div class="chip" style="font-size:30px">Số ' + n + '</div><button class="ib" onclick="wReplay()">🔊</button></div>' +
+    '<div class="stage"><div class="wrap"><canvas id="cg" width="400" height="400"></canvas><canvas id="cd" width="400" height="400"></canvas></div></div>' +
+    '<div class="row" id="wbtns"><button class="cta" style="background:#29b6f6" onclick="wClear()">🧽</button></div>';
+  drawGuide(n);
+  initDraw();
+  var tk = S.token;
+  setTimeout(function(){ if (tk === S.token && !S.wdone) say('Con hãy tô theo nét số ' + NUM[n] + ', bắt đầu từ chấm xanh nhé.'); }, 300);
+}
+function wReplay(){
+  if (S.mode !== 'write') return;
+  sfx.tap(); say('Con hãy tô theo nét số ' + NUM[S.wn] + ', bắt đầu từ chấm xanh nhé.');
+}
+function drawGuide(n){
+  var c = document.getElementById('cg').getContext('2d');
+  c.clearRect(0, 0, CW, CW);
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  var st = STROKES[n];
+  function path(s){
+    c.beginPath();
+    s.forEach(function(p, i){ var q = px(p); if (i === 0) c.moveTo(q[0], q[1]); else c.lineTo(q[0], q[1]); });
+  }
+  c.strokeStyle = '#efe6d2'; c.lineWidth = 46;
+  st.forEach(function(s){ path(s); c.stroke(); });
+  c.strokeStyle = '#cbbf9f'; c.lineWidth = 4; c.setLineDash([2, 12]);
+  st.forEach(function(s){ path(s); c.stroke(); });
+  c.setLineDash([]);
+  st.forEach(function(s, i){
+    var a = px(s[0]), b = px(s[Math.min(3, s.length - 1)]);
+    var ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+    c.fillStyle = '#43a047';
+    c.save(); c.translate(a[0] + Math.cos(ang) * 32, a[1] + Math.sin(ang) * 32); c.rotate(ang);
+    c.beginPath(); c.moveTo(12, 0); c.lineTo(-8, -10); c.lineTo(-8, 10); c.closePath(); c.fill(); c.restore();
+    c.beginPath(); c.arc(a[0], a[1], 14, 0, Math.PI * 2); c.fill();
+    if (st.length > 1) {
+      c.fillStyle = '#fff'; c.font = 'bold 20px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText(String(i + 1), a[0], a[1] + 1);
+    }
+  });
+}
+function initDraw(){
+  need = []; got = 0;
+  STROKES[S.wn].forEach(function(s){
+    var pts = s.map(px);
+    for (var i = 0; i < pts.length - 1; i++) {
+      var a = pts[i], b = pts[i + 1];
+      var d = Math.sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]));
+      var k = Math.max(1, Math.round(d / 8));
+      for (var j = 0; j < k; j++) need.push({x: a[0] + (b[0] - a[0]) * j / k, y: a[1] + (b[1] - a[1]) * j / k, c: false});
+    }
+  });
+  var cv = document.getElementById('cd'), c = cv.getContext('2d'), last = null, down = false;
+  function pos(e){
+    var r = cv.getBoundingClientRect();
+    return [(e.clientX - r.left) * CW / r.width, (e.clientY - r.top) * CW / r.height];
+  }
+  function mark(x, y){
+    for (var i = 0; i < need.length; i++) {
+      var p = need[i];
+      if (!p.c && (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y) < 900) { p.c = true; got++; }
+    }
+  }
+  function seg(a, b){
+    var d = Math.sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]));
+    var k = Math.max(1, Math.ceil(d / 6));
+    for (var j = 1; j <= k; j++) mark(a[0] + (b[0] - a[0]) * j / k, a[1] + (b[1] - a[1]) * j / k);
+  }
+  cv.onpointerdown = function(e){
+    if (S.wdone) return;
+    e.preventDefault(); ctx();
+    down = true; last = pos(e);
+    try { cv.setPointerCapture(e.pointerId); } catch (x) {}
+    c.fillStyle = '#ff7043'; c.beginPath(); c.arc(last[0], last[1], 13, 0, Math.PI * 2); c.fill();
+    mark(last[0], last[1]);
+  };
+  cv.onpointermove = function(e){
+    if (!down || S.wdone) return;
+    e.preventDefault();
+    var p = pos(e);
+    c.strokeStyle = '#ff7043'; c.lineWidth = 26; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(last[0], last[1]); c.lineTo(p[0], p[1]); c.stroke();
+    seg(last, p); last = p;
+    wCheck();
+  };
+  cv.onpointerup = cv.onpointercancel = function(){ down = false; wCheck(); };
+}
+function wCheck(){
+  if (S.wdone || !need.length) return;
+  if (got / need.length >= 0.85) {
+    S.wdone = true; S.total++;
+    var n = S.wn;
+    sfx.good(); confetti(26);
+    var b = document.getElementById('wbtns');
+    if (b) b.innerHTML =
+      (n < 10 ? '<button class="cta" style="background:#43a047" onclick="writeStart(' + (n + 1) + ')">➡️</button>' : '') +
+      '<button class="cta" style="background:#29b6f6" onclick="writeStart(' + n + ')">🔁</button>' +
+      '<button class="cta" style="background:#ff7043" onclick="writePick()">🏠</button>';
+    setTimeout(function(){ say(rnd(PRAISE) + ' Con viết số ' + NUM[n] + ' thật đẹp!'); }, 500);
+  }
+}
+function wClear(){
+  if (S.mode !== 'write') return;
+  sfx.tap();
+  var cv = document.getElementById('cd');
+  cv.getContext('2d').clearRect(0, 0, CW, CW);
+  need.forEach(function(p){ p.c = false; });
+  got = 0; S.wdone = false;
+}
+
+splash();
+</script>
+</body>
+</html>
