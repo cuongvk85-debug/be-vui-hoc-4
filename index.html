@@ -68,6 +68,9 @@ button{font-family:inherit;cursor:pointer;border:0}
 .nb:active{transform:translateY(4px);box-shadow:0 1px 0 #e8cf9f}
 .wrap{position:relative;width:min(88vw,52vh,420px);aspect-ratio:1;margin:4px auto;background:#fff;border-radius:28px;box-shadow:0 7px 0 #e8cf9f;overflow:hidden}
 .wrap canvas{position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}
+.mb.wide{grid-column:1 / span 2}
+.cdot{width:clamp(150px,50vw,260px);height:clamp(150px,50vw,260px);border-radius:50%;box-shadow:inset 0 -14px 0 rgba(0,0,0,.12),0 6px 0 rgba(0,0,0,.1);animation:pop .5s}
+.enword{font-size:clamp(54px,18vw,100px);font-weight:800;color:#e4572e;line-height:1.1}
 .cf{position:fixed;top:-60px;font-size:34px;z-index:99;pointer-events:none;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(115vh) rotate(360deg)}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
@@ -80,7 +83,7 @@ button{font-family:inherit;cursor:pointer;border:0}
 <body>
 <div id="app"></div>
 <script>
-var S = {sound:true, total:0, mode:null, round:0, stars:0, wrong:0, locked:false, list:[], q:null, counted:0, token:0, wn:1, wdone:true};
+var S = {sound:true, total:0, mode:null, round:0, stars:0, wrong:0, locked:false, list:[], q:null, counted:0, token:0, wn:1, wdone:true, vi:false};
 var app = document.getElementById('app');
 var NUM = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín', 'mười'];
 var PRAISE = ['Giỏi quá!', 'Đúng rồi!', 'Tuyệt vời!', 'Con làm đúng rồi!', 'Hay quá!'];
@@ -115,30 +118,43 @@ var sfx = {
   win: function(){ [523, 659, 784, 659, 784, 1047, 1319].forEach(function(f, i){ tone(f, i * 0.12, 0.32); }); }
 };
 
-var voice = null;
+var voice = null, voiceEn = null;
 function loadVoice(){
   try {
     if (!('speechSynthesis' in window)) return;
     var vs = speechSynthesis.getVoices();
-    voice = null;
-    for (var i = 0; i < vs.length; i++) { if (/^vi/i.test(vs[i].lang)) { voice = vs[i]; break; } }
+    voice = null; voiceEn = null;
+    for (var i = 0; i < vs.length; i++) {
+      if (!voice && /^vi/i.test(vs[i].lang)) voice = vs[i];
+      if (!voiceEn && /^en[-_]US/i.test(vs[i].lang)) voiceEn = vs[i];
+    }
+    if (!voiceEn) { for (var j = 0; j < vs.length; j++) { if (/^en/i.test(vs[j].lang)) { voiceEn = vs[j]; break; } } }
   } catch (e) {}
 }
 loadVoice();
 try { if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = loadVoice; } catch (e) {}
 
-function say(text, cb){
+function mkUtter(t, l){
+  var u = new SpeechSynthesisUtterance(t);
+  if (l === 'en') { u.lang = 'en-US'; if (voiceEn) u.voice = voiceEn; u.rate = 0.8; u.pitch = 1.1; }
+  else { u.lang = 'vi-VN'; if (voice) u.voice = voice; u.rate = 0.82; u.pitch = 1.15; }
+  return u;
+}
+function say(text, cb, lang){
+  var list = (typeof text === 'string') ? [{t: text, l: lang || 'vi'}] : text;
   if (!S.sound || !('speechSynthesis' in window)) { if (cb) setTimeout(cb, 900); return; }
   try {
     speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(text);
-    u.lang = 'vi-VN'; if (voice) u.voice = voice;
-    u.rate = 0.82; u.pitch = 1.15;
-    if (cb) { u.onend = cb; u.onerror = cb; }
-    window._u = u;
-    speechSynthesis.speak(u);
+    window._us = [];
+    list.forEach(function(it, i){
+      var u = mkUtter(it.t, it.l);
+      if (cb && i === list.length - 1) { u.onend = cb; u.onerror = cb; }
+      window._us.push(u);
+      speechSynthesis.speak(u);
+    });
   } catch (e) { if (cb) setTimeout(cb, 900); }
 }
+function qSpeak(q){ say(q.sayList || q.say, null, q.en ? 'en' : 'vi'); }
 function sayThen(text, cb){
   var done = false;
   function fn(){ if (!done) { done = true; cb(); } }
@@ -327,10 +343,9 @@ function begin(){
 var MODES = [
   {id:'letters', e:'🔤', t:'Chữ cái', c:'#ff7043'},
   {id:'count',   e:'🔢', t:'Đếm số', c:'#29b6f6'},
-  {id:'color',   e:'🎨', t:'Màu sắc', c:'#ab47bc'},
-  {id:'things',  e:'🪥', t:'Đồ dùng', c:'#43a047'},
+  {id:'english', e:'🗣️', t:'English', c:'#ab47bc'},
   {id:'numbers', e:'🔟', t:'Đố số', c:'#26a69a'},
-  {id:'rules',   e:'👍', t:'Việc nên – không nên làm', c:'#f9a825'}
+  {id:'rules',   e:'👍', t:'Việc nên – không nên làm', c:'#f9a825', wide:true}
 ];
 
 function home(){
@@ -338,7 +353,7 @@ function home(){
   var h = '<div class="bar"><div class="chip">⭐ ' + S.total + '</div><div class="title">Bé Vui Học</div>' +
           '<button class="ib" onclick="toggleSound()">' + (S.sound ? '🔊' : '🔇') + '</button></div><div class="menu">';
   MODES.forEach(function(m){
-    h += '<button class="mb" style="background:' + m.c + '" onclick="openMode(\'' + m.id + '\')">' +
+    h += '<button class="mb' + (m.wide ? ' wide' : '') + '" style="background:' + m.c + '" onclick="openMode(\'' + m.id + '\')">' +
          '<span class="e">' + m.e + '</span><span class="t">' + m.t + '</span></button>';
   });
   h += '</div>';
@@ -346,7 +361,7 @@ function home(){
 }
 function openMode(id){
   ctx(); sfx.tap();
-  if (id === 'numbers') numMenu(); else start(id);
+  if (id === 'numbers') numMenu(); else if (id === 'english') enMenu(); else start(id);
 }
 function toggleSound(){
   S.sound = !S.sound; if (!S.sound) stopSpeech(); else sfx.tap();
@@ -365,21 +380,39 @@ var COUNT_ITEMS = [
   {e:'🍎', n:'quả táo'}, {e:'⭐', n:'ngôi sao'}, {e:'🐟', n:'con cá'}, {e:'🎈', n:'quả bóng bay'},
   {e:'🐥', n:'con gà con'}, {e:'🌸', n:'bông hoa'}, {e:'🚗', n:'chiếc xe'}, {e:'🍪', n:'cái bánh'}
 ];
-var COLORS = [
-  {k:'đỏ', c:'#e53935'}, {k:'xanh dương', c:'#1e88e5'}, {k:'vàng', c:'#fdd835'}, {k:'xanh lá', c:'#43a047'},
-  {k:'cam', c:'#fb8c00'}, {k:'tím', c:'#8e24aa'}, {k:'hồng', c:'#f48fb1'}, {k:'nâu', c:'#795548'}
-];
-var COLOR_OBJ = [
-  {e:'🍎', n:'quả táo', c:'đỏ'}, {e:'🍌', n:'quả chuối', c:'vàng'}, {e:'🥕', n:'củ cà rốt', c:'cam'},
-  {e:'🍇', n:'chùm nho', c:'tím'}, {e:'🍃', n:'chiếc lá', c:'xanh lá'}, {e:'🐳', n:'con cá voi', c:'xanh dương'},
-  {e:'🍫', n:'thanh sô cô la', c:'nâu'}, {e:'🌸', n:'bông hoa', c:'hồng'}
-];
-var THINGS = [
-  {e:'🪥', n:'bàn chải đánh răng'}, {e:'🥄', n:'cái muỗng'}, {e:'🩴', n:'đôi dép'}, {e:'🧢', n:'cái mũ'},
-  {e:'🥛', n:'cái ly'}, {e:'🪑', n:'cái ghế'}, {e:'📖', n:'quyển sách'}, {e:'✏️', n:'cây bút chì'},
-  {e:'✂️', n:'cái kéo'}, {e:'💡', n:'cái đèn'}, {e:'📺', n:'cái ti vi'}, {e:'⏰', n:'cái đồng hồ'},
-  {e:'🔑', n:'chìa khóa'}, {e:'🚲', n:'xe đạp'}, {e:'🛏️', n:'cái giường'}, {e:'☂️', n:'cái ô'}
-];
+var PRAISE_EN = ['Great job!', 'Well done!', 'Awesome!', 'Good job!'];
+var EN = {
+  colors: {title:'Colors', e:'🎨', c:'#ab47bc', items:[
+    {w:'red', vi:'màu đỏ', c:'#e53935', o:{e:'🍎', n:'apple'}},
+    {w:'blue', vi:'màu xanh dương', c:'#1e88e5', o:{e:'🐳', n:'whale'}},
+    {w:'yellow', vi:'màu vàng', c:'#fdd835', o:{e:'🍌', n:'banana'}},
+    {w:'green', vi:'màu xanh lá', c:'#43a047', o:{e:'🍃', n:'leaf'}},
+    {w:'orange', vi:'màu cam', c:'#fb8c00', o:{e:'🥕', n:'carrot'}},
+    {w:'purple', vi:'màu tím', c:'#8e24aa', o:{e:'🍇', n:'grapes', pl:true}},
+    {w:'pink', vi:'màu hồng', c:'#f48fb1', o:{e:'🌸', n:'flower'}},
+    {w:'brown', vi:'màu nâu', c:'#795548', o:{e:'🍫', n:'chocolate'}}
+  ]},
+  animals: {title:'Animals', e:'🐶', c:'#ff7043', items:[
+    {w:'dog', vi:'con chó', e:'🐶', snd:'woof woof'},
+    {w:'cat', vi:'con mèo', e:'🐱', snd:'meow meow'},
+    {w:'bird', vi:'con chim', e:'🐦', snd:'tweet tweet'},
+    {w:'fish', vi:'con cá', e:'🐟'},
+    {w:'duck', vi:'con vịt', e:'🦆', snd:'quack quack'},
+    {w:'cow', vi:'con bò', e:'🐮', snd:'moo moo'},
+    {w:'pig', vi:'con heo', e:'🐷', snd:'oink oink'},
+    {w:'rabbit', vi:'con thỏ', e:'🐰'},
+    {w:'elephant', vi:'con voi', e:'🐘'},
+    {w:'lion', vi:'con sư tử', e:'🦁', snd:'roar'},
+    {w:'monkey', vi:'con khỉ', e:'🐵'},
+    {w:'horse', vi:'con ngựa', e:'🐴', snd:'neigh'}
+  ]},
+  things: {title:'Things', e:'🪥', c:'#43a047', items:[
+    {w:'spoon', vi:'cái muỗng', e:'🥄'}, {w:'cup', vi:'cái ly', e:'🥛'}, {w:'chair', vi:'cái ghế', e:'🪑'},
+    {w:'bed', vi:'cái giường', e:'🛏️'}, {w:'book', vi:'quyển sách', e:'📖'}, {w:'ball', vi:'quả bóng', e:'⚽'},
+    {w:'hat', vi:'cái mũ', e:'🧢'}, {w:'shoes', vi:'đôi giày', e:'👟'}, {w:'toothbrush', vi:'bàn chải đánh răng', e:'🪥'},
+    {w:'umbrella', vi:'cái ô', e:'☂️'}, {w:'clock', vi:'cái đồng hồ', e:'⏰'}, {w:'key', vi:'chìa khóa', e:'🔑'}
+  ]}
+};
 var RULES = [
   /* ----- Nên ----- */
   {e:'🧼', t:'Con rửa tay trước khi ăn cơm.', ok:true, why:'Rửa tay giúp con sạch sẽ và khỏe mạnh.'},
@@ -467,52 +500,38 @@ function genCount(){
     };
   });
 }
-function colorOpts(target){
-  var others = shuffle(COLORS.filter(function(c){ return c.k !== target.k; })).slice(0, 2);
-  return shuffle([target].concat(others)).map(function(c){
-    return {h: '<span class="dot" style="background:' + c.c + '"></span>', ok: c.k === target.k};
-  });
+function art(w){ return /^[aeiou]/i.test(w) ? 'an' : 'a'; }
+function enOptHtml(tp, it){
+  return tp === 'colors' ? '<span class="dot" style="background:' + it.c + '"></span>' : it.e;
 }
-function colorByName(k){ for (var i = 0; i < COLORS.length; i++) if (COLORS[i].k === k) return COLORS[i]; return COLORS[0]; }
-function genColor(){
-  var objs = shuffle(COLOR_OBJ);
-  var cols = shuffle(COLORS);
-  var out = [];
-  for (var i = 0; i < 5; i++) {
-    if (i % 2 === 0) {
-      var c = cols[i];
-      out.push({
-        kind: 'g3',
-        say: 'Con chạm vào màu ' + c.k + '.',
-        visual: '<div class="bigemoji">🎨</div><div class="cap">Màu <b>' + c.k + '</b></div>',
-        opts: colorOpts(c),
-        okSay: 'Đây là màu ' + c.k + '.'
-      });
+function enSayList(tp, it, twice){
+  var l = [{t: it.w + '.', l: 'en'}];
+  if (twice) l.push({t: it.w + '.', l: 'en'});
+  if (S.vi) l.push({t: it.vi + '.', l: 'vi'});
+  return l;
+}
+function genEnglish(tp){
+  var items = EN[tp].items;
+  return shuffle(items).slice(0, 5).map(function(it, i){
+    var others = shuffle(items.filter(function(x){ return x.w !== it.w; })).slice(0, 2);
+    var opts = shuffle([it].concat(others)).map(function(x){ return {h: enOptHtml(tp, x), ok: x.w === it.w}; });
+    var sayList, visual;
+    if (tp === 'colors' && i % 2 === 1) {
+      var q1 = it.o.pl ? 'What color are the ' : 'What color is the ';
+      sayList = [{t: q1 + it.o.n + '?', l: 'en'}];
+      visual = '<div class="bigemoji">' + it.o.e + '</div><div class="cap">' + q1 + '<b>' + it.o.n + '</b>?</div>';
+    } else if (tp === 'animals' && it.snd && i % 2 === 1) {
+      sayList = [{t: it.snd + '!', l: 'en'}, {t: 'Which animal says ' + it.snd + '?', l: 'en'}];
+      visual = '<div class="bigemoji">👂</div><div class="cap">Who says <b>' + it.snd + '</b>?</div>';
     } else {
-      var o = objs[i];
-      var oc = colorByName(o.c);
-      out.push({
-        kind: 'g3',
-        say: o.n + ' màu gì?',
-        visual: '<div class="bigemoji">' + o.e + '</div><div class="cap">' + o.n + ' màu gì?</div>',
-        opts: colorOpts(oc),
-        okSay: o.n + ' màu ' + o.c + '.'
-      });
+      var ask = (tp !== 'colors' && i % 2) ? 'Where is the ' + it.w + '?' : 'Touch the ' + it.w + '!';
+      sayList = [{t: ask, l: 'en'}];
+      visual = '<div class="bigemoji">👂</div><div class="cap">Listen!</div>';
     }
-  }
-  return out;
-}
-function genThings(){
-  return shuffle(THINGS).slice(0, 5).map(function(it){
-    var others = shuffle(THINGS.filter(function(x){ return x.n !== it.n; })).slice(0, 2);
-    var opts = shuffle([it].concat(others)).map(function(x){ return {h: x.e, ok: x.n === it.n}; });
-    return {
-      kind: 'g3',
-      say: 'Cái nào là ' + it.n + '?',
-      visual: '<div class="bigemoji">👀</div><div class="cap">Đâu là <b>' + it.n + '</b>?</div>',
-      opts: opts,
-      okSay: 'Đây là ' + it.n + '.'
-    };
+    var isColor = tp === 'colors';
+    var okList = [{t: rnd(PRAISE_EN) + ' It is ' + (isColor ? '' : art(it.w) + ' ') + it.w + '.', l: 'en'}];
+    if (S.vi) okList.push({t: it.vi + '.', l: 'vi'});
+    return {kind: 'g3', en: true, sayList: sayList, say: sayList[0].t, visual: visual, opts: opts, okList: okList};
   });
 }
 function genRules(){
@@ -575,7 +594,7 @@ function genNumRec(){
 function start(id){
   ctx(); sfx.tap();
   S.mode = id; S.round = 0; S.stars = 0; S.token++;
-  var g = {letters: genLetters, count: genCount, color: genColor, things: genThings, rules: genRules, numrec: genNumRec}[id];
+  var g = (id.indexOf('en-') === 0) ? function(){ return genEnglish(id.slice(3)); } : {letters: genLetters, count: genCount, rules: genRules, numrec: genNumRec}[id];
   S.list = g();
   nextQ();
 }
@@ -589,18 +608,18 @@ function nextQ(){
   q.opts.forEach(function(o, i){
     opts += '<button class="opt ' + (o.cls || '') + '" onclick="pick(' + i + ')">' + o.h + '</button>';
   });
-  var back = S.mode === 'numrec' ? 'numMenu()' : 'home()';
+  var back = backCall();
   app.innerHTML =
-    '<div class="top"><button class="ib" onclick="' + back + '">' + (S.mode === 'numrec' ? '⬅️' : '🏠') + '</button><div class="dots">' + dots + '</div>' +
+    '<div class="top"><button class="ib" onclick="' + back + '">' + (back === 'home()' ? '🏠' : '⬅️') + '</button><div class="dots">' + dots + '</div>' +
     '<button class="ib" onclick="replay()">🔊</button></div>' +
     '<div class="stage">' + q.visual + '</div>' +
     '<div class="opts ' + q.kind + '">' + opts + '</div>';
   var tk = S.token;
-  setTimeout(function(){ if (tk === S.token && S.q === q && !S.locked) say(q.say); }, 250);
+  setTimeout(function(){ if (tk === S.token && S.q === q && !S.locked) qSpeak(q); }, 250);
 }
 function replay(){
   if (S.locked || !S.q) return;
-  sfx.tap(); say(S.q.say);
+  sfx.tap(); qSpeak(S.q);
 }
 function cnt(el){
   if (S.locked || el.getAttribute('data-d')) return;
@@ -621,7 +640,7 @@ function pick(i){
     el.classList.add('right');
     sfx.good(); confetti(14);
     var tk = S.token;
-    sayThen(rnd(PRAISE) + ' ' + q.okSay, function(){
+    sayThen(q.okList ? q.okList : (rnd(PRAISE) + ' ' + q.okSay), function(){
       if (tk !== S.token) return;
       S.round++; nextQ();
     });
@@ -630,29 +649,36 @@ function pick(i){
     sfx.bad();
     el.classList.add('shake');
     setTimeout(function(){ el.classList.remove('shake'); el.classList.add('dim'); }, 420);
-    say('Chưa đúng. Con thử lại nhé!');
+    if (q.en) say([{t: 'Oops! Try again!', l: 'en'}]); else say('Chưa đúng. Con thử lại nhé!');
     if (S.wrong >= 2) {
       var btns = document.querySelectorAll('.opt');
       q.opts.forEach(function(x, k){ if (x.ok) btns[k].classList.add('hint'); });
     }
   }
 }
+function backCall(){
+  if (S.mode === 'numrec') return 'numMenu()';
+  if (S.mode && S.mode.indexOf('en-') === 0) return "enTopic('" + S.mode.slice(3) + "')";
+  return 'home()';
+}
 function finish(){
   S.total += S.stars; S.q = null; S.locked = true;
   var stars = '';
   for (var i = 0; i < S.list.length; i++) stars += i < S.stars ? '⭐' : '☆';
-  var backBtn = S.mode === 'numrec' ? '<button class="cta" style="background:#ff7043" onclick="numMenu()">⬅️</button>' : '<button class="cta" style="background:#ff7043" onclick="home()">🏠</button>';
+  var isEn = S.mode && S.mode.indexOf('en-') === 0;
+  var back = backCall();
+  var backBtn = '<button class="cta" style="background:#ff7043" onclick="' + back + '">' + (back === 'home()' ? '🏠' : '⬅️') + '</button>';
   app.innerHTML =
     '<div class="end">' +
       '<div class="big">🏆</div>' +
-      '<div class="title">Giỏi quá!</div>' +
+      '<div class="title">' + (isEn ? 'Great job!' : 'Giỏi quá!') + '</div>' +
       '<div class="stars">' + stars + '</div>' +
       '<div class="row">' +
         '<button class="cta" style="background:#43a047" onclick="start(\'' + S.mode + '\')">🔁</button>' + backBtn +
       '</div>' +
     '</div>';
   sfx.win(); confetti(40);
-  setTimeout(function(){ say('Giỏi quá! Con được ' + S.stars + ' ngôi sao!'); }, 900);
+  setTimeout(function(){ if (isEn) say([{t: 'Great job! You got ' + S.stars + ' stars!', l: 'en'}]); else say('Giỏi quá! Con được ' + S.stars + ' ngôi sao!'); }, 900);
 }
 
 /* ---------- Đố số: menu, tập viết số ---------- */
@@ -808,6 +834,55 @@ function wClear(){
   cv.getContext('2d').clearRect(0, 0, CW, CW);
   need.forEach(function(p){ p.c = false; });
   got = 0; S.wdone = false;
+}
+
+/* ---------- English: menu, học (Learn) ---------- */
+function toggleVi(){ S.vi = !S.vi; sfx.tap(); enMenu(); }
+function enMenu(){
+  S.mode = null; S.token++; S.wdone = true; stopSpeech();
+  var h = '<div class="bar"><button class="ib" onclick="home()">🏠</button><div class="title">English</div><span style="width:56px"></span></div><div class="menu" style="grid-template-columns:1fr">';
+  Object.keys(EN).forEach(function(k){
+    var T = EN[k];
+    h += '<button class="mb" style="background:' + T.c + ';min-height:clamp(100px,18vh,150px)" onclick="enTopic(\'' + k + '\')"><span class="e">' + T.e + '</span><span class="t">' + T.title + '</span></button>';
+  });
+  h += '</div><div class="row" style="min-height:0"><button class="chip" style="font-size:20px" onclick="toggleVi()">Đọc thêm nghĩa tiếng Việt: ' + (S.vi ? 'Bật' : 'Tắt') + '</button></div>';
+  app.innerHTML = h;
+}
+function enTopic(tp){
+  var T = EN[tp];
+  S.mode = null; S.token++; S.wdone = true; stopSpeech();
+  app.innerHTML =
+    '<div class="bar"><button class="ib" onclick="enMenu()">⬅️</button><div class="title">' + T.title + '</div><span style="width:56px"></span></div>' +
+    '<div class="menu" style="grid-template-columns:1fr">' +
+      '<button class="mb" style="background:#29b6f6" onclick="enLearn(\'' + tp + '\',0)"><span class="e">👆</span><span class="t">Learn</span></button>' +
+      '<button class="mb" style="background:#ff7043" onclick="ctx();start(\'en-' + tp + '\')"><span class="e">🎯</span><span class="t">Play</span></button>' +
+    '</div>';
+}
+function enSpeak(tp, i){ sfx.tap(); say(enSayList(tp, EN[tp].items[i], true)); }
+function enLearn(tp, i){
+  ctx(); sfx.tap();
+  S.mode = 'enlearn'; S.token++; S.q = null; S.locked = true;
+  var T = EN[tp], it = T.items[i], n = T.items.length;
+  var vis = tp === 'colors'
+    ? '<div class="cdot" style="background:' + it.c + '"></div>'
+    : '<div class="bigemoji">' + it.e + '</div>';
+  var prev = i > 0
+    ? '<button class="cta" style="background:#29b6f6" onclick="enLearn(\'' + tp + '\',' + (i - 1) + ')">◀️</button>'
+    : '<span style="width:120px"></span>';
+  var next = '<button class="cta" style="background:#43a047" onclick="' +
+    (i < n - 1 ? 'enLearn(\'' + tp + '\',' + (i + 1) + ')' : 'enLearnDone(\'' + tp + '\')') + '">▶️</button>';
+  app.innerHTML =
+    '<div class="top"><button class="ib" onclick="enTopic(\'' + tp + '\')">⬅️</button><div class="chip">' + (i + 1) + ' / ' + n + '</div>' +
+    '<button class="ib" onclick="enSpeak(\'' + tp + '\',' + i + ')">🔊</button></div>' +
+    '<div class="stage" onclick="enSpeak(\'' + tp + '\',' + i + ')">' + vis + '<div class="enword">' + it.w + '</div></div>' +
+    '<div class="row">' + prev + next + '</div>';
+  var tk = S.token;
+  setTimeout(function(){ if (tk === S.token) say(enSayList(tp, it, true)); }, 250);
+}
+function enLearnDone(tp){
+  S.total++; sfx.win(); confetti(30);
+  enTopic(tp);
+  setTimeout(function(){ say([{t: 'Well done!', l: 'en'}]); }, 300);
 }
 
 splash();
