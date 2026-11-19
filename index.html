@@ -51,9 +51,9 @@ button{font-family:inherit;cursor:pointer;border:0}
 .opt small{font-size:.5em;color:#8a6d4b}
 .opt .dot{width:clamp(70px,22vw,120px);height:clamp(70px,22vw,120px);border-radius:50%;box-shadow:inset 0 -8px 0 rgba(0,0,0,.12),0 3px 0 rgba(0,0,0,.1)}
 .grp{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;font-size:clamp(20px,6vw,32px);line-height:1.1;padding:6px;font-weight:400}
-.opt.yes{background:#c8f0cf;box-shadow:0 7px 0 #7cc78a;font-size:clamp(34px,10vw,56px);color:#1b6b2a}
-.opt.no{background:#ffd3d0;box-shadow:0 7px 0 #e59a95;font-size:clamp(34px,10vw,56px);color:#a52a22}
-.opt.yes span,.opt.no span{font-size:clamp(70px,22vw,110px);display:block}
+.opt.yes{background:#c8f0cf;box-shadow:0 7px 0 #7cc78a;font-size:clamp(28px,8vw,48px);color:#1b6b2a}
+.opt.no{background:#ffd3d0;box-shadow:0 7px 0 #e59a95;font-size:clamp(28px,8vw,48px);color:#a52a22}
+.opt.yes span,.opt.no span{font-size:clamp(56px,17vw,96px);display:block}
 .opt.right{background:#b9f0c2 !important;box-shadow:0 0 0 6px #43a047 !important;animation:pop .5s}
 .opt.shake{animation:shake .4s}
 .opt.dim{opacity:.35;pointer-events:none}
@@ -71,6 +71,8 @@ button{font-family:inherit;cursor:pointer;border:0}
 .mb.wide{grid-column:1 / span 2}
 .cdot{width:clamp(150px,50vw,260px);height:clamp(150px,50vw,260px);border-radius:50%;box-shadow:inset 0 -14px 0 rgba(0,0,0,.12),0 6px 0 rgba(0,0,0,.1);animation:pop .5s}
 .enword{font-size:clamp(54px,18vw,100px);font-weight:800;color:#e4572e;line-height:1.1}
+.shape svg{display:block;width:clamp(140px,46vw,240px);height:auto;animation:pop .5s}
+.opt svg{display:block;width:clamp(64px,19vw,110px);height:auto}
 .cf{position:fixed;top:-60px;font-size:34px;z-index:99;pointer-events:none;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(115vh) rotate(360deg)}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
@@ -381,8 +383,9 @@ var COUNT_ITEMS = [
   {e:'🐥', n:'con gà con'}, {e:'🌸', n:'bông hoa'}, {e:'🚗', n:'chiếc xe'}, {e:'🍪', n:'cái bánh'}
 ];
 var PRAISE_EN = ['Great job!', 'Well done!', 'Awesome!', 'Good job!'];
+function shp(inner){ return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>'; }
 var EN = {
-  colors: {title:'Colors', e:'🎨', c:'#ab47bc', items:[
+  colors: {title:'Colors', e:'🎨', c:'#ab47bc', ask:'the', ok:'color', items:[
     {w:'red', vi:'màu đỏ', c:'#e53935', o:{e:'🍎', n:'apple'}},
     {w:'blue', vi:'màu xanh dương', c:'#1e88e5', o:{e:'🐳', n:'whale'}},
     {w:'yellow', vi:'màu vàng', c:'#fdd835', o:{e:'🍌', n:'banana'}},
@@ -392,7 +395,7 @@ var EN = {
     {w:'pink', vi:'màu hồng', c:'#f48fb1', o:{e:'🌸', n:'flower'}},
     {w:'brown', vi:'màu nâu', c:'#795548', o:{e:'🍫', n:'chocolate'}}
   ]},
-  animals: {title:'Animals', e:'🐶', c:'#ff7043', items:[
+  animals: {title:'Animals', e:'🐶', c:'#ff7043', ask:'the', ok:'art', items:[
     {w:'dog', vi:'con chó', e:'🐶', snd:'woof woof'},
     {w:'cat', vi:'con mèo', e:'🐱', snd:'meow meow'},
     {w:'bird', vi:'con chim', e:'🐦', snd:'tweet tweet'},
@@ -406,13 +409,47 @@ var EN = {
     {w:'monkey', vi:'con khỉ', e:'🐵'},
     {w:'horse', vi:'con ngựa', e:'🐴', snd:'neigh'}
   ]},
-  things: {title:'Things', e:'🪥', c:'#43a047', items:[
+  things: {title:'Things', e:'🪥', c:'#43a047', ask:'the', ok:'art', items:[
     {w:'spoon', vi:'cái muỗng', e:'🥄'}, {w:'cup', vi:'cái ly', e:'🥛'}, {w:'chair', vi:'cái ghế', e:'🪑'},
     {w:'bed', vi:'cái giường', e:'🛏️'}, {w:'book', vi:'quyển sách', e:'📖'}, {w:'ball', vi:'quả bóng', e:'⚽'},
-    {w:'hat', vi:'cái mũ', e:'🧢'}, {w:'shoes', vi:'đôi giày', e:'👟'}, {w:'toothbrush', vi:'bàn chải đánh răng', e:'🪥'},
+    {w:'hat', vi:'cái mũ', e:'🧢'}, {w:'shoes', vi:'đôi giày', e:'👟', pl:true}, {w:'toothbrush', vi:'bàn chải đánh răng', e:'🪥'},
     {w:'umbrella', vi:'cái ô', e:'☂️'}, {w:'clock', vi:'cái đồng hồ', e:'⏰'}, {w:'key', vi:'chìa khóa', e:'🔑'}
+  ]},
+  body: {title:'Body', e:'👀', c:'#29b6f6', ask:'the', ok:'art', items:[
+    {w:'eyes', vi:'đôi mắt', e:'👀', pl:true}, {w:'nose', vi:'cái mũi', e:'👃'}, {w:'mouth', vi:'cái miệng', e:'👄'},
+    {w:'ears', vi:'đôi tai', e:'👂', pl:true}, {w:'hand', vi:'bàn tay', e:'✋'}, {w:'foot', vi:'bàn chân', e:'🦶'},
+    {w:'arm', vi:'cánh tay', e:'💪'}, {w:'leg', vi:'cái chân', e:'🦵'}, {w:'tooth', vi:'cái răng', e:'🦷'}, {w:'tongue', vi:'cái lưỡi', e:'👅'}
+  ]},
+  family: {title:'Family', e:'👨‍👩‍👧', c:'#ec407a', ask:'the', ok:'plain', items:[
+    {w:'mom', vi:'mẹ', e:'👩'}, {w:'dad', vi:'ba', e:'👨'}, {w:'grandma', vi:'bà', e:'👵'}, {w:'grandpa', vi:'ông', e:'👴'},
+    {w:'baby', vi:'em bé', e:'👶'}, {w:'brother', vi:'anh trai, em trai', e:'👦'}, {w:'sister', vi:'chị gái, em gái', e:'👧'}, {w:'friend', vi:'bạn', e:'🧑‍🤝‍🧑'}
+  ]},
+  food: {title:'Food', e:'🍚', c:'#f9a825', ask:'the', ok:'art', items:[
+    {w:'rice', vi:'cơm', e:'🍚', u:true}, {w:'milk', vi:'sữa', e:'🥛', u:true}, {w:'egg', vi:'quả trứng', e:'🥚'}, {w:'bread', vi:'bánh mì', e:'🍞', u:true},
+    {w:'water', vi:'nước', e:'💧', u:true}, {w:'apple', vi:'quả táo', e:'🍎'}, {w:'banana', vi:'quả chuối', e:'🍌'}, {w:'cake', vi:'cái bánh', e:'🍰'}
+  ]},
+  actions: {title:'Actions', e:'🏃', c:'#26a69a', ask:'which', ok:'plain', items:[
+    {w:'eat', vi:'ăn', e:'🍽️'}, {w:'drink', vi:'uống', e:'🥤'}, {w:'sleep', vi:'ngủ', e:'😴'}, {w:'run', vi:'chạy', e:'🏃'},
+    {w:'sit', vi:'ngồi', e:'💺'}, {w:'stand', vi:'đứng', e:'🧍'}, {w:'wash', vi:'rửa', e:'🧼'}, {w:'brush', vi:'đánh răng', e:'🪥'}
+  ]},
+  greetings: {title:'Greetings', e:'👋', c:'#7e57c2', ask:'which', ok:'plain', items:[
+    {w:'hello', vi:'xin chào', e:'🙋'}, {w:'goodbye', vi:'tạm biệt', e:'👋'}, {w:'thank you', vi:'cảm ơn', e:'🙏'},
+    {w:'please', vi:'làm ơn', e:'🤲'}, {w:'sorry', vi:'xin lỗi', e:'😔'}, {w:'yes', vi:'vâng', e:'✅'}, {w:'no', vi:'không', e:'❌'}
+  ]},
+  shapes: {title:'Shapes', e:'🔷', c:'#5c6bc0', ask:'the', ok:'plain', items:[
+    {w:'circle', vi:'hình tròn', svg:shp('<circle cx="50" cy="50" r="42" fill="#ff7043"/>')},
+    {w:'square', vi:'hình vuông', svg:shp('<rect x="12" y="12" width="76" height="76" rx="6" fill="#29b6f6"/>')},
+    {w:'triangle', vi:'hình tam giác', svg:shp('<polygon points="50,10 92,88 8,88" fill="#43a047"/>')},
+    {w:'rectangle', vi:'hình chữ nhật', svg:shp('<rect x="4" y="24" width="92" height="52" rx="5" fill="#ab47bc"/>')},
+    {w:'star', vi:'hình ngôi sao', svg:shp('<polygon points="50,6 61,38 95,38 67,58 78,92 50,71 22,92 33,58 5,38 39,38" fill="#fdd835"/>')},
+    {w:'heart', vi:'hình trái tim', svg:shp('<path d="M50 88 C10 56 8 30 28 20 C40 14 50 22 50 30 C50 22 60 14 72 20 C92 30 90 56 50 88 Z" fill="#e53935"/>')}
+  ]},
+  numbers: {title:'Numbers', e:'🔢', c:'#ef6c00', ask:'number', ok:'plain', items:[
+    {w:'one', vi:'số một', n:1}, {w:'two', vi:'số hai', n:2}, {w:'three', vi:'số ba', n:3}, {w:'four', vi:'số bốn', n:4}, {w:'five', vi:'số năm', n:5},
+    {w:'six', vi:'số sáu', n:6}, {w:'seven', vi:'số bảy', n:7}, {w:'eight', vi:'số tám', n:8}, {w:'nine', vi:'số chín', n:9}, {w:'ten', vi:'số mười', n:10}
   ]}
 };
+Object.keys(EN).forEach(function(k){ EN[k].id = k; });
 var RULES = [
   /* ----- Nên ----- */
   {e:'🧼', t:'Con rửa tay trước khi ăn cơm.', ok:true, why:'Rửa tay giúp con sạch sẽ và khỏe mạnh.'},
@@ -435,6 +472,14 @@ var RULES = [
   {e:'🚽', t:'Con đi vệ sinh đúng chỗ.', ok:true, why:'Đi đúng chỗ thì nhà cửa luôn sạch sẽ.'},
   {e:'🚽💦', t:'Con xả nước sau khi đi vệ sinh.', ok:true, why:'Xả nước để bồn cầu luôn sạch sẽ.'},
   {e:'🧼🚰', t:'Con rửa tay bằng xà phòng sau khi đi vệ sinh.', ok:true, why:'Rửa tay bằng xà phòng giúp con diệt vi trùng.'},
+  {e:'👨‍👩‍👧🙋', t:'Con dạ ngay khi ba mẹ gọi.', ok:true, why:'Ba mẹ gọi thì con dạ ngay, không để ba mẹ phải chờ.'},
+  {e:'🚪👋', t:'Con chào ba mẹ trước khi đi ra khỏi nhà và khi về đến nhà.', ok:true, why:'Ba mẹ sẽ yên tâm khi biết con đi đâu và đã về.'},
+  {e:'🙏🧸', t:'Con xin phép trước khi mượn đồ của người khác.', ok:true, why:'Hỏi mượn rồi mới lấy, đó là con ngoan.'},
+  {e:'🤝', t:'Con đã hứa thì con làm đúng như lời hứa.', ok:true, why:'Giữ lời hứa thì mọi người sẽ tin con.'},
+  {e:'👫', t:'Con nhường nhịn anh chị em.', ok:true, why:'Anh chị em thương nhau thì cả nhà vui.'},
+  {e:'🥗', t:'Con ăn vừa đủ và không kén ăn.', ok:true, why:'Ăn vừa đủ, không kén ăn thì con mau lớn.'},
+  {e:'🧍🪑', t:'Con đứng thẳng và ngồi ngay ngắn.', ok:true, why:'Đứng ngồi đàng hoàng thì con khỏe và tự tin.'},
+  {e:'🚪🤫', t:'Con nhẹ tay khi đóng mở cửa.', ok:true, why:'Nhẹ tay nhẹ chân để không làm ồn người khác.'},
   /* ----- Không nên ----- */
   {svg:'outlet', t:'Con chạm tay vào ổ điện.', ok:false, why:'Ổ điện rất nguy hiểm. Con không chạm vào nhé.'},
   {e:'🔥', t:'Con nghịch lửa.', ok:false, why:'Lửa làm bỏng tay. Con không nghịch lửa nhé.'},
@@ -460,7 +505,15 @@ var RULES = [
   {e:'😣🚽', t:'Con nhịn đi vệ sinh.', ok:false, why:'Con buồn đi thì nói ngay với người lớn nhé.'},
   {svg:'wcSlip', t:'Con chạy nhảy trong nhà vệ sinh.', ok:false, why:'Sàn nhà vệ sinh ướt, chạy nhảy dễ trượt té.'},
   {e:'🧸🚽', t:'Con bỏ đồ chơi, giấy hoặc đồ vật vào bồn cầu.', ok:false, why:'Đồ vật làm tắc bồn cầu. Con đừng bỏ vào nhé.'},
-  {e:'🤲🦠', t:'Con không rửa tay sau khi đi vệ sinh.', ok:false, why:'Không rửa tay sẽ có vi trùng, dễ bị đau bụng.'}
+  {e:'🤲🦠', t:'Con không rửa tay sau khi đi vệ sinh.', ok:false, why:'Không rửa tay sẽ có vi trùng, dễ bị đau bụng.'},
+  {e:'🤥', t:'Con nói dối.', ok:false, why:'Con nói thật thì mọi người mới tin con.'},
+  {e:'🙊', t:'Con nói lời xấu, nói tục.', ok:false, why:'Lời xấu làm người khác buồn. Con nói lời tử tế nhé.'},
+  {e:'✋🧸', t:'Con lấy đồ của người khác khi chưa hỏi.', ok:false, why:'Lấy đồ khi chưa hỏi là không đúng. Con hãy xin phép nhé.'},
+  {e:'😤', t:'Con la hét, cãi lại khi ba mẹ nhắc nhở.', ok:false, why:'Ba mẹ nhắc là vì thương con. Con lắng nghe và nói nhẹ nhàng nhé.'},
+  {e:'🧸❌', t:'Con mượn đồ rồi không trả.', ok:false, why:'Mượn rồi thì phải trả đúng hẹn.'},
+  {e:'🍖😋', t:'Con ăn thật nhiều vì tham ăn.', ok:false, why:'Ăn quá nhiều làm đau bụng. Con ăn vừa đủ nhé.'},
+  {e:'😢🗣️', t:'Con nói xấu bạn.', ok:false, why:'Nói xấu làm bạn buồn. Con hãy nói điều tốt về bạn nhé.'},
+  {e:'😠🧸', t:'Con giành đồ chơi của bạn.', ok:false, why:'Con nhường bạn, hai bạn cùng chơi vui.'}
 ];
 
 /* ---------- Tạo câu hỏi ---------- */
@@ -501,8 +554,22 @@ function genCount(){
   });
 }
 function art(w){ return /^[aeiou]/i.test(w) ? 'an' : 'a'; }
+function cap1(w){ return w.charAt(0).toUpperCase() + w.slice(1); }
+function starsHtml(n){
+  var g = ''; for (var j = 0; j < n; j++) g += '<span>⭐</span>';
+  return '<div class="grp" style="max-width:300px;font-size:clamp(24px,7.5vw,36px)">' + g + '</div>';
+}
 function enOptHtml(tp, it){
-  return tp === 'colors' ? '<span class="dot" style="background:' + it.c + '"></span>' : it.e;
+  if (it.n !== undefined) return String(it.n);
+  if (it.svg) return it.svg;
+  if (tp === 'colors') return '<span class="dot" style="background:' + it.c + '"></span>';
+  return it.e;
+}
+function enVis(tp, it){
+  if (it.n !== undefined) return '<div class="num-big" style="font-size:clamp(90px,30vw,170px)">' + it.n + '</div>' + starsHtml(it.n);
+  if (it.svg) return '<div class="shape">' + it.svg + '</div>';
+  if (tp === 'colors') return '<div class="cdot" style="background:' + it.c + '"></div>';
+  return '<div class="bigemoji">' + it.e + '</div>';
 }
 function enSayList(tp, it, twice){
   var l = [{t: it.w + '.', l: 'en'}];
@@ -510,8 +577,21 @@ function enSayList(tp, it, twice){
   if (S.vi) l.push({t: it.vi + '.', l: 'vi'});
   return l;
 }
+function enAsk(T, it, i){
+  var w = it.w;
+  if (T.ask === 'which') return 'Which one is ' + w + '?';
+  if (T.ask === 'number') return i % 2 ? 'Where is ' + w + '?' : 'Touch the number ' + w + '!';
+  if (T.id === 'colors') return 'Touch the ' + w + '!';
+  return i % 2 ? (it.pl ? 'Where are the ' : 'Where is the ') + w + '?' : 'Touch the ' + w + '!';
+}
+function enOk(T, it){
+  var p = rnd(PRAISE_EN), w = it.w;
+  if (T.id === 'colors') return p + ' It is ' + w + '.';
+  if (T.ok === 'art') return p + ' ' + (it.pl ? 'They are ' + w + '.' : (it.u ? 'It is ' + w + '.' : 'It is ' + art(w) + ' ' + w + '.'));
+  return p + ' ' + cap1(w) + '.';
+}
 function genEnglish(tp){
-  var items = EN[tp].items;
+  var T = EN[tp], items = T.items;
   return shuffle(items).slice(0, 5).map(function(it, i){
     var others = shuffle(items.filter(function(x){ return x.w !== it.w; })).slice(0, 2);
     var opts = shuffle([it].concat(others)).map(function(x){ return {h: enOptHtml(tp, x), ok: x.w === it.w}; });
@@ -523,13 +603,14 @@ function genEnglish(tp){
     } else if (tp === 'animals' && it.snd && i % 2 === 1) {
       sayList = [{t: it.snd + '!', l: 'en'}, {t: 'Which animal says ' + it.snd + '?', l: 'en'}];
       visual = '<div class="bigemoji">👂</div><div class="cap">Who says <b>' + it.snd + '</b>?</div>';
+    } else if (tp === 'numbers' && i % 2 === 1) {
+      sayList = [{t: 'How many stars?', l: 'en'}];
+      visual = starsHtml(it.n) + '<div class="cap">How many <b>stars</b>?</div>';
     } else {
-      var ask = (tp !== 'colors' && i % 2) ? 'Where is the ' + it.w + '?' : 'Touch the ' + it.w + '!';
-      sayList = [{t: ask, l: 'en'}];
+      sayList = [{t: enAsk(T, it, i), l: 'en'}];
       visual = '<div class="bigemoji">👂</div><div class="cap">Listen!</div>';
     }
-    var isColor = tp === 'colors';
-    var okList = [{t: rnd(PRAISE_EN) + ' It is ' + (isColor ? '' : art(it.w) + ' ') + it.w + '.', l: 'en'}];
+    var okList = [{t: enOk(T, it), l: 'en'}];
     if (S.vi) okList.push({t: it.vi + '.', l: 'vi'});
     return {kind: 'g3', en: true, sayList: sayList, say: sayList[0].t, visual: visual, opts: opts, okList: okList};
   });
@@ -840,10 +921,10 @@ function wClear(){
 function toggleVi(){ S.vi = !S.vi; sfx.tap(); enMenu(); }
 function enMenu(){
   S.mode = null; S.token++; S.wdone = true; stopSpeech();
-  var h = '<div class="bar"><button class="ib" onclick="home()">🏠</button><div class="title">English</div><span style="width:56px"></span></div><div class="menu" style="grid-template-columns:1fr">';
+  var h = '<div class="bar"><button class="ib" onclick="home()">🏠</button><div class="title">English</div><span style="width:56px"></span></div><div class="menu" style="grid-template-columns:1fr 1fr;gap:10px;align-content:start">';
   Object.keys(EN).forEach(function(k){
     var T = EN[k];
-    h += '<button class="mb" style="background:' + T.c + ';min-height:clamp(100px,18vh,150px)" onclick="enTopic(\'' + k + '\')"><span class="e">' + T.e + '</span><span class="t">' + T.title + '</span></button>';
+    h += '<button class="mb" style="background:' + T.c + ';min-height:clamp(96px,14vh,130px)" onclick="enTopic(\'' + k + '\')"><span class="e" style="font-size:clamp(40px,12vw,60px)">' + T.e + '</span><span class="t" style="font-size:clamp(18px,5vw,24px)">' + T.title + '</span></button>';
   });
   h += '</div><div class="row" style="min-height:0"><button class="chip" style="font-size:20px" onclick="toggleVi()">Đọc thêm nghĩa tiếng Việt: ' + (S.vi ? 'Bật' : 'Tắt') + '</button></div>';
   app.innerHTML = h;
@@ -863,9 +944,7 @@ function enLearn(tp, i){
   ctx(); sfx.tap();
   S.mode = 'enlearn'; S.token++; S.q = null; S.locked = true;
   var T = EN[tp], it = T.items[i], n = T.items.length;
-  var vis = tp === 'colors'
-    ? '<div class="cdot" style="background:' + it.c + '"></div>'
-    : '<div class="bigemoji">' + it.e + '</div>';
+  var vis = enVis(tp, it);
   var prev = i > 0
     ? '<button class="cta" style="background:#29b6f6" onclick="enLearn(\'' + tp + '\',' + (i - 1) + ')">◀️</button>'
     : '<span style="width:120px"></span>';
