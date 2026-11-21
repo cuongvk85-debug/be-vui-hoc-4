@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Bé Vui Học – Game cho bé 4 tuổi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 html,body{margin:0;height:100%;touch-action:manipulation}
@@ -349,7 +349,8 @@ var MODES = [
   {id:'count',   e:'🔢', t:'Đếm số', c:'#29b6f6'},
   {id:'english', e:'🗣️', t:'English', c:'#ab47bc'},
   {id:'numbers', e:'🔟', t:'Đố số', c:'#26a69a'},
-  {id:'rules',   e:'👍', t:'Việc nên – không nên làm', c:'#f9a825', wide:true}
+  {id:'tw',      e:'✍️', t:'Tập viết chữ', c:'#5c6bc0'},
+  {id:'rules',   e:'👍', t:'Việc nên – không nên làm', c:'#f9a825'}
 ];
 
 function home(){
@@ -365,7 +366,7 @@ function home(){
 }
 function openMode(id){
   ctx(); sfx.tap();
-  if (id === 'numbers') numMenu(); else if (id === 'english') enMenu(); else start(id);
+  if (id === 'numbers') numMenu(); else if (id === 'tw') twMenu(); else if (id === 'english') enMenu(); else start(id);
 }
 function toggleSound(){
   S.sound = !S.sound; if (!S.sound) stopSpeech(); else sfx.tap();
@@ -658,8 +659,8 @@ function enAsk(T, it, i){
   if (it.nm) return i % 2 ? 'Where is ' + cap1(w) + '?' : 'Touch ' + cap1(w) + '!';
   return i % 2 ? (it.pl ? 'Where are the ' : 'Where is the ') + w + '?' : 'Touch the ' + w + '!';
 }
-function enOk(T, it){
-  var p = rnd(PRAISE_EN), w = it.w;
+function enOk(T, it, noPraise){
+  var p = noPraise ? '' : rnd(PRAISE_EN), w = it.w;
   if (T.id === 'colors') return p + ' It is ' + w + '.';
   if (T.ok === 'act') return p + ' The kid is ' + it.ing + '.';
   if (T.ok === 'art') return p + ' ' + (it.pl ? 'They are ' + w + '.' : (it.u ? 'It is ' + w + '.' : 'It is ' + art(w) + ' ' + w + '.'));
@@ -688,7 +689,9 @@ function genEnglish(tp){
     }
     var okList = [{t: enOk(T, it), l: 'en'}];
     if (S.vi) okList.push({t: it.vi + '.', l: 'vi'});
-    return {kind: (tp === 'actions') ? 'g2' : 'g3', en: true, sayList: sayList, say: sayList[0].t, visual: visual, opts: opts, okList: okList};
+    var ansList = [{t: enOk(T, it, true).trim(), l: 'en'}];
+    if (S.vi) ansList.push({t: it.vi + '.', l: 'vi'});
+    return {ansList: ansList, kind: (tp === 'actions') ? 'g2' : 'g3', en: true, sayList: sayList, say: sayList[0].t, visual: visual, opts: opts, okList: okList};
   });
 }
 function genRules(){
@@ -742,7 +745,7 @@ function genNumRec(){
         var g = ''; for (var j = 0; j < k; j++) g += '<span>' + e + '</span>';
         return {h: '<div class="grp">' + g + '</div>', ok: k === n};
       }),
-      okSay: 'Đúng rồi! Số ' + NUM[n] + ' có ' + NUM[n] + ' hình.'
+      okSay: 'Số ' + NUM[n] + ' có ' + NUM[n] + ' hình.'
     };
   });
 }
@@ -802,15 +805,17 @@ function pick(i){
       S.round++; nextQ();
     });
   } else {
-    S.wrong++;
+    S.wrong++; S.locked = true;
     sfx.bad();
     el.classList.add('shake');
-    setTimeout(function(){ el.classList.remove('shake'); el.classList.add('dim'); }, 420);
-    if (q.en) say([{t: 'Oops! Try again!', l: 'en'}]); else say('Chưa đúng. Con thử lại nhé!');
-    if (S.wrong >= 2) {
-      var btns = document.querySelectorAll('.opt');
-      q.opts.forEach(function(x, k){ if (x.ok) btns[k].classList.add('hint'); });
-    }
+    var btns = document.querySelectorAll('.opt');
+    setTimeout(function(){ el.classList.remove('shake'); el.classList.add('dim'); q.opts.forEach(function(x, k){ if (x.ok) btns[k].classList.add('right'); }); }, 420);
+    var tk2 = S.token;
+    var lst = q.en ? [{t: 'Oops!', l: 'en'}].concat(q.ansList || []) : [{t: 'Chưa đúng rồi. ' + (q.okSay || ''), l: 'vi'}];
+    sayThen(lst, function(){
+      if (tk2 !== S.token) return;
+      S.round++; nextQ();
+    });
   }
 }
 function backCall(){
@@ -874,12 +879,12 @@ var STROKES = {
   5: [[[.74, .12], [.33, .12], [.33, .46]].concat(arc(.5, .64, .26, .24, 230, 520))],
   6: [[[.68, .12], [.46, .20], [.30, .42], [.26, .66]].concat(arc(.5, .68, .24, .22, 180, -180))],
   7: [[[.24, .12], [.76, .12], [.40, .90]]],
-  8: [arc(.5, .30, .2, .18, -60, -270).concat(arc(.5, .68, .25, .22, -90, 270))],
+  8: [arc(.5, .30, .2, .18, -90, -270).concat(arc(.5, .68, .25, .22, -90, 270)).concat(arc(.5, .30, .2, .18, -270, -450))],
   9: [arc(.5, .32, .24, .21, 0, -360).concat([[.74, .32], [.70, .62], [.5, .88], [.34, .82]])],
   10: [[[.12, .30], [.22, .14], [.22, .88]], arc(.62, .5, .17, .36, -90, -450)]
 };
 var CW = 400, PAD = 40, SZ = 320;
-var need = [], got = 0;
+var need = [], got = 0, sn = [], sg = [], ends = [];
 function px(p){ return [PAD + p[0] * SZ, PAD + p[1] * SZ]; }
 
 function writeStart(n){
@@ -891,11 +896,11 @@ function writeStart(n){
   drawGuide(n);
   initDraw();
   var tk = S.token;
-  setTimeout(function(){ if (tk === S.token && !S.wdone) say('Con hãy tô theo nét số ' + NUM[n] + ', bắt đầu từ chấm xanh nhé.'); }, 300);
+  setTimeout(function(){ if (tk === S.token && !S.wdone) say('Con hãy tô theo nét số ' + NUM[n] + ', bắt đầu từ chấm xanh và dừng ở chấm đỏ nhé.'); }, 300);
 }
 function wReplay(){
   if (S.mode !== 'write') return;
-  sfx.tap(); say('Con hãy tô theo nét số ' + NUM[S.wn] + ', bắt đầu từ chấm xanh nhé.');
+  sfx.tap(); say('Con hãy tô theo nét số ' + NUM[S.wn] + ', bắt đầu từ chấm xanh và dừng ở chấm đỏ nhé.');
 }
 function drawGuide(n){
   var c = document.getElementById('cg').getContext('2d');
@@ -922,17 +927,27 @@ function drawGuide(n){
       c.fillStyle = '#fff'; c.font = 'bold 20px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
       c.fillText(String(i + 1), a[0], a[1] + 1);
     }
+    var e = px(s[s.length - 1]), dd = Math.sqrt((e[0] - a[0]) * (e[0] - a[0]) + (e[1] - a[1]) * (e[1] - a[1]));
+    if (dd < 24) {
+      c.strokeStyle = '#e53935'; c.lineWidth = 6; c.beginPath(); c.arc(e[0], e[1], 23, 0, Math.PI * 2); c.stroke();
+    } else {
+      c.fillStyle = '#e53935'; c.beginPath(); c.arc(e[0], e[1], 15, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#fff'; c.fillRect(e[0] - 6, e[1] - 6, 12, 12);
+    }
   });
 }
 function initDraw(){
-  need = []; got = 0;
-  STROKES[S.wn].forEach(function(s){
+  need = []; got = 0; sn = []; sg = []; ends = [];
+  STROKES[S.wn].forEach(function(s, si){
     var pts = s.map(px);
+    var ep = pts[pts.length - 1];
+    ends.push({x: ep[0], y: ep[1], hit: false});
+    sn.push(0); sg.push(0);
     for (var i = 0; i < pts.length - 1; i++) {
       var a = pts[i], b = pts[i + 1];
       var d = Math.sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]));
       var k = Math.max(1, Math.round(d / 8));
-      for (var j = 0; j < k; j++) need.push({x: a[0] + (b[0] - a[0]) * j / k, y: a[1] + (b[1] - a[1]) * j / k, c: false});
+      for (var j = 0; j < k; j++) { need.push({x: a[0] + (b[0] - a[0]) * j / k, y: a[1] + (b[1] - a[1]) * j / k, c: false, s: si}); sn[si]++; }
     }
   });
   var cv = document.getElementById('cd'), c = cv.getContext('2d'), last = null, down = false;
@@ -943,7 +958,17 @@ function initDraw(){
   function mark(x, y){
     for (var i = 0; i < need.length; i++) {
       var p = need[i];
-      if (!p.c && (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y) < 900) { p.c = true; got++; }
+      if (!p.c && (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y) < 900) { p.c = true; got++; sg[p.s]++; }
+    }
+    for (var m = 0; m < ends.length; m++) {
+      var en = ends[m];
+      if (!en.hit && sg[m] >= sn[m] * 0.75 && (en.x - x) * (en.x - x) + (en.y - y) * (en.y - y) < 900) {
+        en.hit = true;
+        c.fillStyle = '#43a047'; c.beginPath(); c.arc(en.x, en.y, 17, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = '#fff'; c.lineWidth = 5; c.lineCap = 'round'; c.lineJoin = 'round';
+        c.beginPath(); c.moveTo(en.x - 7, en.y); c.lineTo(en.x - 2, en.y + 6); c.lineTo(en.x + 8, en.y - 6); c.stroke();
+        sfx.tap();
+      }
     }
   }
   function seg(a, b){
@@ -972,7 +997,8 @@ function initDraw(){
 }
 function wCheck(){
   if (S.wdone || !need.length) return;
-  if (got / need.length >= 0.85) {
+  var allEnds = ends.every(function(e){ return e.hit; });
+  if (got / need.length >= 0.85 && allEnds) {
     S.wdone = true; S.total++;
     var n = S.wn;
     sfx.good(); confetti(26);
@@ -990,7 +1016,229 @@ function wClear(){
   var cv = document.getElementById('cd');
   cv.getContext('2d').clearRect(0, 0, CW, CW);
   need.forEach(function(p){ p.c = false; });
+  sg = sg.map(function(){ return 0; }); ends.forEach(function(e){ e.hit = false; });
   got = 0; S.wdone = false;
+}
+
+
+/* ---------- Tập viết chữ: chữ cái, dấu thanh, chữ đơn ---------- */
+var TW_LET = [['a','a'],['ă','a mũ ngược'],['â','a mũ'],['b','bờ'],['c','cờ'],['d','dờ'],['đ','đờ'],['e','e'],['ê','e mũ'],['g','gờ'],['h','hờ'],['i','i'],['k','ca'],['l','lờ'],['m','mờ'],['n','nờ'],['o','o'],['ô','o mũ'],['ơ','o móc'],['p','pờ'],['q','cu'],['r','rờ'],['s','sờ'],['t','tờ'],['u','u'],['ư','u móc'],['v','vờ'],['x','xờ'],['y','y']];
+var TW_TONE = [['à','huyền'],['á','sắc'],['ả','hỏi'],['ã','ngã'],['ạ','nặng']];
+var TW_WORD = [['mẹ','👩'],['ba','👨'],['bà','👵'],['ông','👴'],['bé','👶'],['mèo','🐱'],['chó','🐶'],['gà','🐔'],['cá','🐟'],['bò','🐮'],
+  ['nhà','🏠'],['xe','🚗'],['hoa','🌸'],['bánh','🍰'],['sách','📖'],['bóng','⚽'],['trăng','🌙'],['sao','⭐'],['mưa','🌧️'],['cây','🌳']];
+var TW_FONT = '700 {size}px Quicksand,"Baloo 2",Nunito,system-ui,sans-serif';
+var TWS = {sec: null, idx: 0, items: []};
+var tneed = [], tgot = 0, tcn = [], tcg = [];
+
+function twItems(sec){
+  var a = [];
+  if (sec === 'letters') TW_LET.forEach(function(x){
+    a.push({txt: x[0], title: 'Chữ ' + x[0] + ' thường', name: x[1], say: 'Con hãy tô chữ ' + x[1] + ', viết thường, bắt đầu từ chấm xanh nhé.'});
+    a.push({txt: x[0].toUpperCase(), title: 'Chữ ' + x[0].toUpperCase() + ' hoa', name: x[1], say: 'Con hãy tô chữ ' + x[1] + ', viết hoa, bắt đầu từ chấm xanh nhé.'});
+  });
+  else if (sec === 'tones') TW_TONE.forEach(function(x){
+    a.push({txt: x[0], title: 'Dấu ' + x[1], name: 'dấu ' + x[1], say: 'Dấu ' + x[1] + '. Con hãy tô chữ a có dấu ' + x[1] + ' nhé.'});
+  });
+  else TW_WORD.forEach(function(x){
+    a.push({txt: x[0], e: x[1], title: x[0], name: 'chữ ' + x[0], say: 'Con hãy tô chữ ' + x[0] + ' nhé.', word: true});
+  });
+  return a;
+}
+function twMenu(){
+  S.mode = null; S.token++; S.wdone = true; stopSpeech();
+  app.innerHTML =
+    '<div class="bar"><button class="ib" onclick="home()">🏠</button><div class="title">Tập viết chữ</div><span style="width:56px"></span></div>' +
+    '<div class="menu" style="grid-template-columns:1fr">' +
+      '<button class="mb" style="background:#ff7043" onclick="twGroup(\'letters\')"><span class="e">🅰️</span><span class="t">Chữ cái</span></button>' +
+      '<button class="mb" style="background:#29b6f6" onclick="twGroup(\'tones\')"><span class="e">á</span><span class="t">Dấu thanh</span></button>' +
+      '<button class="mb" style="background:#43a047" onclick="twGroup(\'words\')"><span class="e">📖</span><span class="t">Chữ đơn</span></button>' +
+    '</div>';
+}
+function twGroup(sec){
+  S.mode = null; S.token++; S.wdone = true; stopSpeech(); sfx.tap();
+  var cols = ['#ff7043', '#29b6f6', '#ab47bc', '#43a047', '#f9a825'], g = '', grid, title;
+  if (sec === 'letters') {
+    title = 'Chọn chữ cái'; grid = 'repeat(5,1fr)';
+    TW_LET.forEach(function(x, i){
+      g += '<button class="nb" style="color:' + cols[i % 5] + ';font-size:clamp(20px,6.5vw,32px)" onclick="twStart(\'letters\',' + (i * 2) + ')">' + x[0].toUpperCase() + x[0] + '</button>';
+    });
+  } else if (sec === 'tones') {
+    title = 'Chọn dấu thanh'; grid = 'repeat(3,1fr)';
+    TW_TONE.forEach(function(x, i){
+      g += '<button class="nb" style="color:' + cols[i % 5] + ';display:flex;flex-direction:column;align-items:center;justify-content:center" onclick="twStart(\'tones\',' + i + ')">' + x[0] + '<small style="font-size:16px;color:#8a6d4b">' + x[1] + '</small></button>';
+    });
+  } else {
+    title = 'Chọn chữ đơn'; grid = 'repeat(4,1fr)';
+    TW_WORD.forEach(function(x, i){
+      g += '<button class="nb" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:' + cols[i % 5] + '" onclick="twStart(\'words\',' + i + ')"><span style="font-size:clamp(28px,9vw,44px)">' + x[1] + '</span><span style="font-size:clamp(14px,4vw,20px)">' + x[0] + '</span></button>';
+    });
+  }
+  app.innerHTML =
+    '<div class="bar"><button class="ib" onclick="twMenu()">⬅️</button><div class="title">' + title + '</div><span style="width:56px"></span></div>' +
+    '<div class="menu" style="grid-template-columns:' + grid + ';gap:10px;align-content:start;overflow-y:auto">' + g + '</div>';
+}
+function twReady(cb){
+  var done = false;
+  function go(){ if (!done) { done = true; cb(); } }
+  try {
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load('700 100px Quicksand', 'aăâbcdđeêghiklmnoôơpqrstuưvxy áàảãạ').then(go, go);
+      setTimeout(go, 1500);
+    } else go();
+  } catch (e) { go(); }
+}
+function twRender(it){
+  var cv = document.createElement('canvas'); cv.width = 400; cv.height = 400;
+  var c = cv.getContext('2d'), size = 300, by = 300;
+  if (it.word) {
+    c.font = TW_FONT.replace('{size}', '100');
+    var w = c.measureText(it.txt).width || 100;
+    size = Math.min(260, 340 / w * 100);
+    by = 200 + size * 0.3;
+  }
+  c.font = TW_FONT.replace('{size}', Math.round(size));
+  c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.fillStyle = '#000';
+  c.fillText(it.txt, 200, by);
+  return {cv: cv, size: size, by: by};
+}
+function twSkeleton(cv){
+  var W = 200, H = 200, s = document.createElement('canvas'); s.width = W; s.height = H;
+  var sc = s.getContext('2d'); sc.drawImage(cv, 0, 0, W, H);
+  var d = sc.getImageData(0, 0, W, H).data, g = new Uint8Array(W * H), i, k;
+  for (i = 0; i < W * H; i++) g[i] = d[i * 4 + 3] > 110 ? 1 : 0;
+  var changed = true, iter = 0, p = new Array(8);
+  while (changed && iter < 80) {
+    changed = false; iter++;
+    for (var pass = 0; pass < 2; pass++) {
+      var del = [];
+      for (var y = 1; y < H - 1; y++) for (var x = 1; x < W - 1; x++) {
+        i = y * W + x;
+        if (!g[i]) continue;
+        p[0] = g[i - W]; p[1] = g[i - W + 1]; p[2] = g[i + 1]; p[3] = g[i + W + 1]; p[4] = g[i + W]; p[5] = g[i + W - 1]; p[6] = g[i - 1]; p[7] = g[i - W - 1];
+        var B = 0, A = 0;
+        for (k = 0; k < 8; k++) { B += p[k]; if (p[k] === 0 && p[(k + 1) & 7] === 1) A++; }
+        if (B < 2 || B > 6 || A !== 1) continue;
+        if (pass === 0) { if (p[0] * p[2] * p[4] !== 0 || p[2] * p[4] * p[6] !== 0) continue; }
+        else { if (p[0] * p[2] * p[6] !== 0 || p[0] * p[4] * p[6] !== 0) continue; }
+        del.push(i);
+      }
+      if (del.length) { changed = true; for (k = 0; k < del.length; k++) g[del[k]] = 0; }
+    }
+  }
+  /* tách thành các thành phần liên thông, lấy mẫu mỗi ~8px */
+  var seen = new Uint8Array(W * H), comps = [];
+  for (i = 0; i < W * H; i++) {
+    if (!g[i] || seen[i]) continue;
+    var stack = [i], pts = {}, list = [];
+    seen[i] = 1;
+    while (stack.length) {
+      var j = stack.pop(), jx = j % W, jy = (j / W) | 0;
+      var key = ((jx / 4) | 0) + ',' + ((jy / 4) | 0);
+      if (!pts[key]) { pts[key] = 1; list.push([jx * 2 + 1, jy * 2 + 1]); }
+      for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
+        var nx = jx + dx, ny = jy + dy;
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+        var nj = ny * W + nx;
+        if (g[nj] && !seen[nj]) { seen[nj] = 1; stack.push(nj); }
+      }
+    }
+    comps.push(list);
+  }
+  return comps;
+}
+function twStart(sec, idx){
+  var items = twItems(sec), it = items[idx];
+  S.mode = 'tw'; S.token++; S.wdone = false;
+  TWS = {sec: sec, idx: idx, items: items};
+  var chip = it.e ? '<div class="chip" style="font-size:34px">' + it.e + '</div>' : '<div class="chip" style="font-size:22px">' + it.title + '</div>';
+  app.innerHTML =
+    '<div class="top"><button class="ib" onclick="twGroup(\'' + sec + '\')">⬅️</button>' + chip + '<button class="ib" onclick="twReplay()">🔊</button></div>' +
+    '<div class="stage"><div class="wrap"><canvas id="cg" width="400" height="400"></canvas><canvas id="cd" width="400" height="400"></canvas></div></div>' +
+    '<div class="row" id="wbtns"><button class="cta" style="background:#29b6f6" onclick="twClear()">🧽</button></div>';
+  var tk = S.token;
+  twReady(function(){
+    if (tk !== S.token) return;
+    twSetup(it);
+  });
+  setTimeout(function(){ if (tk === S.token && !S.wdone) say(it.say); }, 300);
+}
+function twReplay(){
+  if (S.mode !== 'tw') return;
+  sfx.tap(); say(TWS.items[TWS.idx].say);
+}
+function twSetup(it){
+  var r = twRender(it), comps = twSkeleton(r.cv);
+  tneed = []; tgot = 0; tcn = []; tcg = [];
+  comps.forEach(function(list, k){
+    tcn.push(list.length); tcg.push(0);
+    list.forEach(function(q){ tneed.push({x: q[0], y: q[1], c: false, k: k}); });
+  });
+  var g = document.getElementById('cg').getContext('2d');
+  g.clearRect(0, 0, 400, 400);
+  g.font = TW_FONT.replace('{size}', Math.round(r.size)); g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  g.fillStyle = '#efe6d2'; g.fillText(it.txt, 200, r.by);
+  g.fillStyle = '#cbbf9f';
+  tneed.forEach(function(q){ g.beginPath(); g.arc(q.x, q.y, 2.6, 0, Math.PI * 2); g.fill(); });
+  var st = null;
+  tneed.forEach(function(q){ if (!st || q.x + q.y < st.x + st.y) st = q; });
+  if (st) { g.fillStyle = '#43a047'; g.beginPath(); g.arc(st.x, st.y, 14, 0, Math.PI * 2); g.fill(); }
+  var R2 = it.word ? 26 * 26 : 32 * 32;
+  var cv = document.getElementById('cd'), c = cv.getContext('2d'), last = null, down = false;
+  function pos(e){
+    var b = cv.getBoundingClientRect();
+    return [(e.clientX - b.left) * 400 / b.width, (e.clientY - b.top) * 400 / b.height];
+  }
+  function mark(x, y){
+    for (var i = 0; i < tneed.length; i++) {
+      var q = tneed[i];
+      if (!q.c && (q.x - x) * (q.x - x) + (q.y - y) * (q.y - y) < R2) { q.c = true; tgot++; tcg[q.k]++; }
+    }
+  }
+  function seg(a, b){
+    var d = Math.sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]));
+    var k = Math.max(1, Math.ceil(d / 6));
+    for (var j = 1; j <= k; j++) mark(a[0] + (b[0] - a[0]) * j / k, a[1] + (b[1] - a[1]) * j / k);
+  }
+  cv.onpointerdown = function(e){
+    if (S.wdone) return;
+    e.preventDefault(); ctx();
+    down = true; last = pos(e);
+    try { cv.setPointerCapture(e.pointerId); } catch (x) {}
+    c.fillStyle = '#ff7043'; c.beginPath(); c.arc(last[0], last[1], 13, 0, Math.PI * 2); c.fill();
+    mark(last[0], last[1]);
+  };
+  cv.onpointermove = function(e){
+    if (!down || S.wdone) return;
+    e.preventDefault();
+    var p = pos(e);
+    c.strokeStyle = '#ff7043'; c.lineWidth = 26; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(last[0], last[1]); c.lineTo(p[0], p[1]); c.stroke();
+    seg(last, p); last = p;
+    twCheck();
+  };
+  cv.onpointerup = cv.onpointercancel = function(){ down = false; twCheck(); };
+}
+function twCheck(){
+  if (S.wdone || S.mode !== 'tw' || !tneed.length) return;
+  if (tgot / tneed.length < 0.85) return;
+  for (var k = 0; k < tcn.length; k++) if (tcg[k] < Math.ceil(tcn[k] * 0.8)) return;
+  S.wdone = true; S.total++;
+  var it = TWS.items[TWS.idx], last = TWS.idx >= TWS.items.length - 1;
+  sfx.good(); confetti(26);
+  var b = document.getElementById('wbtns');
+  if (b) b.innerHTML =
+    (!last ? '<button class="cta" style="background:#43a047" onclick="twStart(\'' + TWS.sec + '\',' + (TWS.idx + 1) + ')">➡️</button>' : '') +
+    '<button class="cta" style="background:#29b6f6" onclick="twStart(\'' + TWS.sec + '\',' + TWS.idx + ')">🔁</button>' +
+    '<button class="cta" style="background:#ff7043" onclick="twGroup(\'' + TWS.sec + '\')">🏠</button>';
+  setTimeout(function(){ say(rnd(PRAISE) + ' Con viết ' + it.name + ' thật đẹp!'); }, 500);
+}
+function twClear(){
+  if (S.mode !== 'tw') return;
+  sfx.tap();
+  document.getElementById('cd').getContext('2d').clearRect(0, 0, 400, 400);
+  tneed.forEach(function(q){ q.c = false; });
+  tcg = tcg.map(function(){ return 0; });
+  tgot = 0; S.wdone = false;
 }
 
 /* ---------- English: menu, học (Learn) ---------- */
