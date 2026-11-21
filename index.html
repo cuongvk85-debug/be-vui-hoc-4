@@ -350,7 +350,8 @@ var MODES = [
   {id:'english', e:'🗣️', t:'English', c:'#ab47bc'},
   {id:'numbers', e:'🔟', t:'Đố số', c:'#26a69a'},
   {id:'tw',      e:'✍️', t:'Tập viết chữ', c:'#5c6bc0'},
-  {id:'rules',   e:'👍', t:'Việc nên – không nên làm', c:'#f9a825'}
+  {id:'rules',   e:'👍', t:'Việc nên – không nên làm', c:'#f9a825'},
+  {id:'play',    e:'🎮', t:'Bé Chơi Vui', c:'#ec407a', wide:true}
 ];
 
 function home(){
@@ -366,6 +367,7 @@ function home(){
 }
 function openMode(id){
   ctx(); sfx.tap();
+  if (id === 'play') { location.href = 'choi-vui.html'; return; }
   if (id === 'numbers') numMenu(); else if (id === 'tw') twMenu(); else if (id === 'english') enMenu(); else start(id);
 }
 function toggleSound(){
