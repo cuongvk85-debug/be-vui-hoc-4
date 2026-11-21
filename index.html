@@ -73,6 +73,8 @@ button{font-family:inherit;cursor:pointer;border:0}
 .enword{font-size:clamp(54px,18vw,100px);font-weight:800;color:#e4572e;line-height:1.1}
 .shape svg{display:block;width:clamp(140px,46vw,240px);height:auto;animation:pop .5s}
 .opt svg{display:block;width:clamp(64px,19vw,110px);height:auto}
+.opts.g2 .opt svg{width:clamp(110px,36vw,170px)}
+.opts.g2 .opt:has(svg){min-height:0;padding:6px}
 .cf{position:fixed;top:-60px;font-size:34px;z-index:99;pointer-events:none;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(115vh) rotate(360deg)}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
@@ -384,6 +386,72 @@ var COUNT_ITEMS = [
 ];
 var PRAISE_EN = ['Great job!', 'Well done!', 'Awesome!', 'Good job!'];
 function shp(inner){ return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>'; }
+
+/* ---------- Hình bé làm động tác (English: Actions) ---------- */
+var AK = '#ef6c00';
+function aGround(){ return '<path d="M0 146 H200 V142 a18 18 0 0 1 -18 18 H18 a18 18 0 0 1 -18 -18Z" fill="#c5e1a5"/>'; }
+function aFace(x, y, o){
+  o = o || {};
+  var f = '';
+  if (o.sleep) f += '<path d="M' + (x - 8) + ' ' + y + ' q3 3 6 0 M' + (x + 2) + ' ' + y + ' q3 3 6 0" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>';
+  else f += '<circle cx="' + (x - 4) + '" cy="' + (y - 2) + '" r="1.8" fill="#fff"/><circle cx="' + (x + 4) + '" cy="' + (y - 2) + '" r="1.8" fill="#fff"/>';
+  if (o.open) f += '<ellipse cx="' + x + '" cy="' + (y + 6) + '" rx="3.6" ry="4.6" fill="#fff"/>';
+  else f += '<path d="M' + (x - 4) + ' ' + (y + 4) + ' q4 4 8 0" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>';
+  return f;
+}
+function aKid(o){
+  o.c = AK; o.r = 12; o.lw = 6; o.bw = 9;
+  return kid(o) + aFace(o.h[0], o.h[1], o);
+}
+function aNote(x, y, c){
+  return '<g fill="' + c + '" stroke="' + c + '"><ellipse cx="' + x + '" cy="' + y + '" rx="6" ry="4.5" stroke="none"/><path d="M' + (x + 5) + ' ' + y + ' V' + (y - 20) + ' q8 2 8 10" fill="none" stroke-width="3" stroke-linecap="round"/></g>';
+}
+function aChair(x){
+  return '<g fill="#8d6e63" stroke="#8d6e63" stroke-width="5" stroke-linecap="round"><line x1="' + x + '" y1="70" x2="' + x + '" y2="146"/><line x1="' + (x + 46) + '" y1="110" x2="' + (x + 46) + '" y2="146"/><rect x="' + (x - 3) + '" y="104" width="52" height="7" rx="3" stroke="none"/></g>';
+}
+var ACT = {
+  stand: function(){ return svgWrap(aGround() + aKid({h:[100,52], hip:[100,102], la:[[88,92],[86,114]], ra:[[112,92],[114,114]], ll:[[95,126],[94,146]], rl:[[105,126],[106,146]]})); },
+  walk: function(){ return svgWrap(aGround() + aKid({h:[100,52], hip:[100,102], la:[[92,90],[84,108]], ra:[[108,90],[118,106]], ll:[[90,126],[82,146]], rl:[[110,124],[122,146]]})); },
+  run: function(){ return svgWrap(aGround() +
+    '<g stroke="#90a4ae" stroke-width="4" stroke-linecap="round"><line x1="18" y1="70" x2="48" y2="70"/><line x1="10" y1="92" x2="42" y2="92"/><line x1="22" y1="114" x2="50" y2="114"/></g>' +
+    aKid({h:[112,50], hip:[96,100], la:[[92,80],[80,92]], ra:[[124,78],[136,68]], ll:[[82,120],[64,134]], rl:[[118,114],[124,146]], open:true})); },
+  jump: function(){ return svgWrap(aGround() + '<ellipse cx="100" cy="148" rx="24" ry="4" fill="#9ccc65"/>' +
+    '<g stroke="#90a4ae" stroke-width="3" stroke-linecap="round"><line x1="80" y1="134" x2="80" y2="142"/><line x1="100" y1="136" x2="100" y2="144"/><line x1="120" y1="134" x2="120" y2="142"/></g>' +
+    aKid({h:[100,38], hip:[100,88], la:[[84,58],[72,40]], ra:[[116,58],[128,40]], ll:[[86,106],[92,124]], rl:[[114,106],[108,124]], open:true})); },
+  sit: function(){ return svgWrap(aGround() + aChair(56) +
+    aKid({h:[82,54], hip:[82,100], la:[[92,88],[104,96]], ra:[[96,92],[108,98]], ll:[[108,100],[108,146]], rl:[[118,100],[118,146]]})); },
+  eat: function(){ return svgWrap(aGround() + aChair(30) +
+    '<g stroke="#8d6e63" stroke-width="5" stroke-linecap="round"><rect x="104" y="92" width="88" height="6" rx="3" fill="#8d6e63"/><line x1="186" y1="98" x2="186" y2="146"/></g>' +
+    '<path d="M126 90 q16 22 32 0Z" fill="#fff" stroke="#90a4ae" stroke-width="3"/><path d="M128 88 q14 -10 28 0" fill="#fff" stroke="#e0e0e0" stroke-width="2"/>' +
+    aKid({h:[56,54], hip:[56,100], la:[[72,88],[100,88]], ra:[[72,78],[76,62]], ll:[[82,100],[82,146]], rl:[[92,100],[92,146]], open:true}) +
+    '<line x1="76" y1="62" x2="68" y2="58" stroke="#b0bec5" stroke-width="3.5" stroke-linecap="round"/>'); },
+  drink: function(){ return svgWrap(aGround() +
+    aKid({h:[100,52], hip:[100,102], la:[[88,92],[86,114]], ra:[[116,76],[110,62]], ll:[[95,126],[94,146]], rl:[[105,126],[106,146]]}) +
+    '<path d="M106 46 H124 L121 68 H109Z" fill="#fff" stroke="#64b5f6" stroke-width="3"/><rect x="108" y="54" width="14" height="12" fill="#bbdefb"/>'); },
+  sleep: function(){ return svgWrap(
+    '<rect x="10" y="100" width="180" height="16" rx="6" fill="#fff"/><rect x="8" y="114" width="184" height="16" rx="5" fill="#a1887f"/><line x1="14" y1="130" x2="14" y2="146" stroke="#8d6e63" stroke-width="6" stroke-linecap="round"/><line x1="186" y1="130" x2="186" y2="146" stroke="#8d6e63" stroke-width="6" stroke-linecap="round"/>' +
+    '<ellipse cx="42" cy="98" rx="26" ry="9" fill="#90caf9"/>' +
+    '<circle cx="46" cy="88" r="12" fill="' + AK + '"/>' + aFace(46, 88, {sleep:true}) +
+    '<rect x="62" y="82" width="120" height="26" rx="12" fill="#4fc3f7"/><path d="M80 82 v26 M108 82 v26 M136 82 v26 M164 82 v26" stroke="#29b6f6" stroke-width="4"/>' +
+    '<g fill="#7e57c2" font-weight="800" font-family="Baloo 2,sans-serif"><text x="92" y="64" font-size="30">Z</text><text x="118" y="46" font-size="24">Z</text><text x="140" y="30" font-size="18">Z</text></g>' +
+    '<path d="M168 24 a14 14 0 1 0 14 22 a11 11 0 0 1 -14 -22Z" fill="#fdd835"/>', '#c5cae9'); },
+  wash: function(){ return svgWrap(aGround() +
+    '<rect x="112" y="104" width="84" height="42" rx="4" fill="#b0bec5"/><path d="M152 104 V78 H136 V90" fill="none" stroke="#78909c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<g stroke="#4fc3f7" stroke-width="3" stroke-linecap="round"><line x1="136" y1="94" x2="136" y2="98"/><line x1="130" y1="100" x2="130" y2="104"/><line x1="142" y1="100" x2="142" y2="104"/></g>' +
+    aKid({h:[64,52], hip:[64,102], la:[[80,86],[118,98]], ra:[[82,92],[122,102]], ll:[[59,126],[58,146]], rl:[[69,126],[70,146]]}) +
+    '<g fill="#fff" stroke="#4fc3f7" stroke-width="2"><circle cx="122" cy="90" r="5"/><circle cx="132" cy="84" r="4"/><circle cx="112" cy="86" r="3.5"/></g>'); },
+  brush: function(){ return svgWrap(aGround() +
+    aKid({h:[100,52], hip:[100,102], la:[[88,92],[86,114]], ra:[[116,78],[116,64]], ll:[[95,126],[94,146]], rl:[[105,126],[106,146]]}) +
+    '<line x1="120" y1="63" x2="101" y2="58" stroke="#26c6da" stroke-width="5" stroke-linecap="round"/><line x1="101" y1="58" x2="95" y2="57" stroke="#fff" stroke-width="6" stroke-linecap="round"/>' +
+    '<g fill="#fff" stroke="#80deea" stroke-width="1.5"><circle cx="92" cy="62" r="3.5"/><circle cx="97" cy="66" r="3"/><circle cx="88" cy="56" r="2.5"/></g>' +
+    '<g fill="#fdd835"><circle cx="134" cy="48" r="3"/><circle cx="142" cy="58" r="2.2"/><circle cx="76" cy="40" r="2.6"/></g>'); },
+  clap: function(){ return svgWrap(aGround() +
+    '<g stroke="#fdd835" stroke-width="4" stroke-linecap="round"><line x1="100" y1="56" x2="100" y2="46"/><line x1="84" y1="62" x2="76" y2="54"/><line x1="116" y1="62" x2="124" y2="54"/><line x1="78" y1="78" x2="68" y2="76"/><line x1="122" y1="78" x2="132" y2="76"/></g>' +
+    aKid({h:[100,52], hip:[100,102], la:[[88,86],[98,80]], ra:[[112,86],[102,80]], ll:[[95,126],[94,146]], rl:[[105,126],[106,146]], open:true})); },
+  sing: function(){ return svgWrap(aGround() +
+    aKid({h:[100,54], hip:[100,104], la:[[86,84],[72,72]], ra:[[114,84],[128,72]], ll:[[95,128],[94,146]], rl:[[105,128],[106,146]], open:true}) +
+    aNote(40, 70, '#ab47bc') + aNote(156, 52, '#ec407a') + aNote(150, 104, '#1e88e5')); }
+};
 var EN = {
   colors: {title:'Colors', e:'🎨', c:'#ab47bc', ask:'the', ok:'color', items:[
     {w:'red', vi:'màu đỏ', c:'#e53935', o:{e:'🍎', n:'apple'}},
@@ -405,15 +473,15 @@ var EN = {
     {w:'pig', vi:'con heo', e:'🐷', snd:'oink oink'},
     {w:'rabbit', vi:'con thỏ', e:'🐰'},
     {w:'elephant', vi:'con voi', e:'🐘'},
-    {w:'lion', vi:'con sư tử', e:'🦁', snd:'roar'},
+    {w:'lion', vi:'con sư tử', e:'🦁', snd:'roar roar'},
     {w:'monkey', vi:'con khỉ', e:'🐵'},
-    {w:'horse', vi:'con ngựa', e:'🐴', snd:'neigh'}
+    {w:'horse', vi:'con ngựa', e:'🐴', snd:'neigh neigh'}
   ]},
   things: {title:'Things', e:'🪥', c:'#43a047', ask:'the', ok:'art', items:[
-    {w:'spoon', vi:'cái muỗng', e:'🥄'}, {w:'cup', vi:'cái ly', e:'🥛'}, {w:'chair', vi:'cái ghế', e:'🪑'},
+    {w:'spoon', vi:'cái muỗng', e:'🥄'}, {w:'cup', vi:'cái tách', e:'☕'}, {w:'chair', vi:'cái ghế', e:'🪑'},
     {w:'bed', vi:'cái giường', e:'🛏️'}, {w:'book', vi:'quyển sách', e:'📖'}, {w:'ball', vi:'quả bóng', e:'⚽'},
-    {w:'hat', vi:'cái mũ', e:'🧢'}, {w:'shoes', vi:'đôi giày', e:'👟', pl:true}, {w:'toothbrush', vi:'bàn chải đánh răng', e:'🪥'},
-    {w:'umbrella', vi:'cái ô', e:'☂️'}, {w:'clock', vi:'cái đồng hồ', e:'⏰'}, {w:'key', vi:'chìa khóa', e:'🔑'}
+    {w:'hat', vi:'cái nón', e:'👒'}, {w:'shoes', vi:'đôi giày', e:'👟', pl:true}, {w:'toothbrush', vi:'bàn chải đánh răng', e:'🪥'},
+    {w:'umbrella', vi:'cái ô', e:'☂️'}, {w:'clock', vi:'cái đồng hồ', e:'🕒'}, {w:'key', vi:'chìa khóa', e:'🔑'}
   ]},
   body: {title:'Body', e:'👀', c:'#29b6f6', ask:'the', ok:'art', items:[
     {w:'eyes', vi:'đôi mắt', e:'👀', pl:true}, {w:'nose', vi:'cái mũi', e:'👃'}, {w:'mouth', vi:'cái miệng', e:'👄'},
@@ -421,16 +489,20 @@ var EN = {
     {w:'arm', vi:'cánh tay', e:'💪'}, {w:'leg', vi:'cái chân', e:'🦵'}, {w:'tooth', vi:'cái răng', e:'🦷'}, {w:'tongue', vi:'cái lưỡi', e:'👅'}
   ]},
   family: {title:'Family', e:'👨‍👩‍👧', c:'#ec407a', ask:'the', ok:'plain', items:[
-    {w:'mom', vi:'mẹ', e:'👩'}, {w:'dad', vi:'ba', e:'👨'}, {w:'grandma', vi:'bà', e:'👵'}, {w:'grandpa', vi:'ông', e:'👴'},
+    {w:'mom', vi:'mẹ', e:'👩', nm:true}, {w:'dad', vi:'ba', e:'👨', nm:true}, {w:'grandma', vi:'bà', e:'👵', nm:true}, {w:'grandpa', vi:'ông', e:'👴', nm:true},
     {w:'baby', vi:'em bé', e:'👶'}, {w:'brother', vi:'anh trai, em trai', e:'👦'}, {w:'sister', vi:'chị gái, em gái', e:'👧'}, {w:'friend', vi:'bạn', e:'🧑‍🤝‍🧑'}
   ]},
   food: {title:'Food', e:'🍚', c:'#f9a825', ask:'the', ok:'art', items:[
     {w:'rice', vi:'cơm', e:'🍚', u:true}, {w:'milk', vi:'sữa', e:'🥛', u:true}, {w:'egg', vi:'quả trứng', e:'🥚'}, {w:'bread', vi:'bánh mì', e:'🍞', u:true},
     {w:'water', vi:'nước', e:'💧', u:true}, {w:'apple', vi:'quả táo', e:'🍎'}, {w:'banana', vi:'quả chuối', e:'🍌'}, {w:'cake', vi:'cái bánh', e:'🍰'}
   ]},
-  actions: {title:'Actions', e:'🏃', c:'#26a69a', ask:'which', ok:'plain', items:[
-    {w:'eat', vi:'ăn', e:'🍽️'}, {w:'drink', vi:'uống', e:'🥤'}, {w:'sleep', vi:'ngủ', e:'😴'}, {w:'run', vi:'chạy', e:'🏃'},
-    {w:'sit', vi:'ngồi', e:'💺'}, {w:'stand', vi:'đứng', e:'🧍'}, {w:'wash', vi:'rửa', e:'🧼'}, {w:'brush', vi:'đánh răng', e:'🪥'}
+  actions: {title:'Actions', e:'🏃', c:'#26a69a', ask:'act', ok:'act', items:[
+    {w:'eat', ing:'eating', vi:'ăn', svg:ACT.eat()}, {w:'drink', ing:'drinking', vi:'uống', svg:ACT.drink()},
+    {w:'sleep', ing:'sleeping', vi:'ngủ', svg:ACT.sleep()}, {w:'run', ing:'running', vi:'chạy', svg:ACT.run()},
+    {w:'walk', ing:'walking', vi:'đi bộ', svg:ACT.walk()}, {w:'jump', ing:'jumping', vi:'nhảy', svg:ACT.jump()},
+    {w:'sit', ing:'sitting', vi:'ngồi', svg:ACT.sit()}, {w:'stand', ing:'standing', vi:'đứng', svg:ACT.stand()},
+    {w:'wash hands', ing:'washing hands', vi:'rửa tay', svg:ACT.wash()}, {w:'brush teeth', ing:'brushing teeth', vi:'đánh răng', svg:ACT.brush()},
+    {w:'clap', ing:'clapping', vi:'vỗ tay', svg:ACT.clap()}, {w:'sing', ing:'singing', vi:'hát', svg:ACT.sing()}
   ]},
   greetings: {title:'Greetings', e:'👋', c:'#7e57c2', ask:'which', ok:'plain', items:[
     {w:'hello', vi:'xin chào', e:'🙋'}, {w:'goodbye', vi:'tạm biệt', e:'👋'}, {w:'thank you', vi:'cảm ơn', e:'🙏'},
@@ -579,21 +651,25 @@ function enSayList(tp, it, twice){
 }
 function enAsk(T, it, i){
   var w = it.w;
+  if (T.ask === 'act') return i % 2 ? 'Who is ' + it.ing + '?' : 'Which one is ' + it.ing + '?';
   if (T.ask === 'which') return 'Which one is ' + w + '?';
-  if (T.ask === 'number') return i % 2 ? 'Where is ' + w + '?' : 'Touch the number ' + w + '!';
+  if (T.ask === 'number') return i % 2 ? 'Where is number ' + w + '?' : 'Touch the number ' + w + '!';
   if (T.id === 'colors') return 'Touch the ' + w + '!';
+  if (it.nm) return i % 2 ? 'Where is ' + cap1(w) + '?' : 'Touch ' + cap1(w) + '!';
   return i % 2 ? (it.pl ? 'Where are the ' : 'Where is the ') + w + '?' : 'Touch the ' + w + '!';
 }
 function enOk(T, it){
   var p = rnd(PRAISE_EN), w = it.w;
   if (T.id === 'colors') return p + ' It is ' + w + '.';
+  if (T.ok === 'act') return p + ' The kid is ' + it.ing + '.';
   if (T.ok === 'art') return p + ' ' + (it.pl ? 'They are ' + w + '.' : (it.u ? 'It is ' + w + '.' : 'It is ' + art(w) + ' ' + w + '.'));
   return p + ' ' + cap1(w) + '.';
 }
 function genEnglish(tp){
   var T = EN[tp], items = T.items;
   return shuffle(items).slice(0, 5).map(function(it, i){
-    var others = shuffle(items.filter(function(x){ return x.w !== it.w; })).slice(0, 2);
+    var nOpt = (tp === 'actions') ? 3 : 2;
+    var others = shuffle(items.filter(function(x){ return x.w !== it.w; })).slice(0, nOpt);
     var opts = shuffle([it].concat(others)).map(function(x){ return {h: enOptHtml(tp, x), ok: x.w === it.w}; });
     var sayList, visual;
     if (tp === 'colors' && i % 2 === 1) {
@@ -608,11 +684,11 @@ function genEnglish(tp){
       visual = starsHtml(it.n) + '<div class="cap">How many <b>stars</b>?</div>';
     } else {
       sayList = [{t: enAsk(T, it, i), l: 'en'}];
-      visual = '<div class="bigemoji">👂</div><div class="cap">Listen!</div>';
+      visual = (tp === 'actions') ? '<div class="bigemoji" style="font-size:clamp(56px,16vw,90px)">👂</div><div class="cap">Listen!</div>' : '<div class="bigemoji">👂</div><div class="cap">Listen!</div>';
     }
     var okList = [{t: enOk(T, it), l: 'en'}];
     if (S.vi) okList.push({t: it.vi + '.', l: 'vi'});
-    return {kind: 'g3', en: true, sayList: sayList, say: sayList[0].t, visual: visual, opts: opts, okList: okList};
+    return {kind: (tp === 'actions') ? 'g2' : 'g3', en: true, sayList: sayList, say: sayList[0].t, visual: visual, opts: opts, okList: okList};
   });
 }
 function genRules(){
@@ -953,7 +1029,7 @@ function enLearn(tp, i){
   app.innerHTML =
     '<div class="top"><button class="ib" onclick="enTopic(\'' + tp + '\')">⬅️</button><div class="chip">' + (i + 1) + ' / ' + n + '</div>' +
     '<button class="ib" onclick="enSpeak(\'' + tp + '\',' + i + ')">🔊</button></div>' +
-    '<div class="stage" onclick="enSpeak(\'' + tp + '\',' + i + ')">' + vis + '<div class="enword">' + it.w + '</div></div>' +
+    '<div class="stage" onclick="enSpeak(\'' + tp + '\',' + i + ')">' + vis + '<div class="enword"' + (it.w.length > 8 ? ' style="font-size:clamp(40px,12vw,70px)"' : '') + '>' + it.w + '</div></div>' +
     '<div class="row">' + prev + next + '</div>';
   var tk = S.token;
   setTimeout(function(){ if (tk === S.token) say(enSayList(tp, it, true)); }, 250);
