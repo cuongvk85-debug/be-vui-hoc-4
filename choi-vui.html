@@ -400,7 +400,8 @@ function gBubble(tk){
     else say([{t:'Chạm', l:'vi'}, {t: target.en, l:'en'}]);
   }
   function showPrompt(){
-    pr.innerHTML = mode === 'abc' ? 'Chạm chữ <b>' + target.l + '</b> 🔊' : 'Chạm <b>' + target.en + '</b> 🔊';
+    pr.dataset.i = ITEMS.indexOf(target);
+    pr.innerHTML = mode === 'abc' ? 'Chạm chữ <b>' + target.l + '</b> 🔊' : '<span style="font-size:1.5em">🔊</span>';
     document.getElementById('sc').innerHTML = 'Điểm: <b>' + score + '</b> (cần 6 điểm để thắng)';
   }
   pr.onclick = speakPrompt;
@@ -452,7 +453,7 @@ function gBubble(tk){
    3. GHÉP ĐÔI – lật thẻ tìm cặp (hình ↔ chữ cái hoặc hình ↔ từ tiếng Anh), 60 giây
    ===================================================== */
 function gMatch(tk){
-  var mode = Math.random() < 0.5 ? 'abc' : 'en';
+  var mode = 'abc';
   var pick = shuffle(ITEMS).slice(0, 4), cards = [];
   pick.forEach(function(it, i){
     cards.push({pair:i, it:it, kind:'pic'});
@@ -486,7 +487,7 @@ function gMatch(tk){
     var a = first; first = null;
     if (a.c.pair === c.pair) {
       a.el.classList.add('ok'); el.classList.add('ok'); found++; sfx.good();
-      if (mode === 'abc') sayAbc(c.it); else sayEn(c.it);
+      say([{t:'Chữ ' + c.it.l + ', ' + c.it.s + '. ' + c.it.vi, l:'vi'}, {t: c.it.en, l:'en'}]);
       if (found === 4) {
         lock = true;
         setTimeout(function(){
