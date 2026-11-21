@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Bé Vui Học – Game cho bé 4 tuổi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 html,body{margin:0;height:100%;touch-action:manipulation}
@@ -887,59 +887,69 @@ var CW = 400, PAD = 40, SZ = 320;
 var need = [], got = 0, sn = [], sg = [], ends = [];
 function px(p){ return [PAD + p[0] * SZ, PAD + p[1] * SZ]; }
 
+var wOpt = {lw: 46, dot: 14, r2: 900, bw: 26, lines: null};
+function wPrompt(n){ return 'Con hãy tô theo nét số ' + NUM[n] + ', bắt đầu từ chấm xanh và dừng ở chấm đỏ nhé.'; }
 function writeStart(n){
   S.mode = 'write'; S.wn = n; S.token++; S.wdone = false;
   app.innerHTML =
     '<div class="top"><button class="ib" onclick="writePick()">⬅️</button><div class="chip" style="font-size:30px">Số ' + n + '</div><button class="ib" onclick="wReplay()">🔊</button></div>' +
     '<div class="stage"><div class="wrap"><canvas id="cg" width="400" height="400"></canvas><canvas id="cd" width="400" height="400"></canvas></div></div>' +
     '<div class="row" id="wbtns"><button class="cta" style="background:#29b6f6" onclick="wClear()">🧽</button></div>';
-  drawGuide(n);
-  initDraw();
+  wOpt = {lw: 46, dot: 14, r2: 900, bw: 26, lines: null};
+  var P = STROKES[n].map(function(st){ return st.map(px); });
+  drawGuide(P);
+  initDraw(P);
   var tk = S.token;
-  setTimeout(function(){ if (tk === S.token && !S.wdone) say('Con hãy tô theo nét số ' + NUM[n] + ', bắt đầu từ chấm xanh và dừng ở chấm đỏ nhé.'); }, 300);
+  setTimeout(function(){ if (tk === S.token && !S.wdone) say(wPrompt(n)); }, 300);
 }
 function wReplay(){
   if (S.mode !== 'write') return;
-  sfx.tap(); say('Con hãy tô theo nét số ' + NUM[S.wn] + ', bắt đầu từ chấm xanh và dừng ở chấm đỏ nhé.');
+  sfx.tap(); say(wPrompt(S.wn));
 }
-function drawGuide(n){
+function drawGuide(P){
   var c = document.getElementById('cg').getContext('2d');
   c.clearRect(0, 0, CW, CW);
   c.lineCap = 'round'; c.lineJoin = 'round';
-  var st = STROKES[n];
+  var D = wOpt.dot;
+  if (wOpt.lines) {
+    c.lineWidth = 3;
+    wOpt.lines.forEach(function(l){
+      c.strokeStyle = l.c; c.beginPath(); c.moveTo(14, l.y); c.lineTo(CW - 14, l.y); c.stroke();
+    });
+  }
   function path(s){
     c.beginPath();
-    s.forEach(function(p, i){ var q = px(p); if (i === 0) c.moveTo(q[0], q[1]); else c.lineTo(q[0], q[1]); });
+    s.forEach(function(q, i){ if (i === 0) c.moveTo(q[0], q[1]); else c.lineTo(q[0], q[1]); });
   }
-  c.strokeStyle = '#efe6d2'; c.lineWidth = 46;
-  st.forEach(function(s){ path(s); c.stroke(); });
+  c.strokeStyle = '#efe6d2'; c.lineWidth = wOpt.lw;
+  P.forEach(function(s){ path(s); c.stroke(); });
   c.strokeStyle = '#cbbf9f'; c.lineWidth = 4; c.setLineDash([2, 12]);
-  st.forEach(function(s){ path(s); c.stroke(); });
+  P.forEach(function(s){ path(s); c.stroke(); });
   c.setLineDash([]);
-  st.forEach(function(s, i){
-    var a = px(s[0]), b = px(s[Math.min(3, s.length - 1)]);
+  P.forEach(function(s, i){
+    var a = s[0], b = s[Math.min(3, s.length - 1)];
     var ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+    if (isNaN(ang) || (b[0] === a[0] && b[1] === a[1])) ang = 0;
     c.fillStyle = '#43a047';
-    c.save(); c.translate(a[0] + Math.cos(ang) * 32, a[1] + Math.sin(ang) * 32); c.rotate(ang);
-    c.beginPath(); c.moveTo(12, 0); c.lineTo(-8, -10); c.lineTo(-8, 10); c.closePath(); c.fill(); c.restore();
-    c.beginPath(); c.arc(a[0], a[1], 14, 0, Math.PI * 2); c.fill();
-    if (st.length > 1) {
-      c.fillStyle = '#fff'; c.font = 'bold 20px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.save(); c.translate(a[0] + Math.cos(ang) * D * 2.3, a[1] + Math.sin(ang) * D * 2.3); c.rotate(ang);
+    c.beginPath(); c.moveTo(D * .86, 0); c.lineTo(-D * .57, -D * .71); c.lineTo(-D * .57, D * .71); c.closePath(); c.fill(); c.restore();
+    c.beginPath(); c.arc(a[0], a[1], D, 0, Math.PI * 2); c.fill();
+    if (P.length > 1) {
+      c.fillStyle = '#fff'; c.font = 'bold ' + Math.round(D * 1.4) + 'px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
       c.fillText(String(i + 1), a[0], a[1] + 1);
     }
-    var e = px(s[s.length - 1]), dd = Math.sqrt((e[0] - a[0]) * (e[0] - a[0]) + (e[1] - a[1]) * (e[1] - a[1]));
-    if (dd < 24) {
-      c.strokeStyle = '#e53935'; c.lineWidth = 6; c.beginPath(); c.arc(e[0], e[1], 23, 0, Math.PI * 2); c.stroke();
+    var e = s[s.length - 1], dd = Math.sqrt((e[0] - a[0]) * (e[0] - a[0]) + (e[1] - a[1]) * (e[1] - a[1]));
+    if (dd < D * 1.7) {
+      c.strokeStyle = '#e53935'; c.lineWidth = Math.max(4, D * .43); c.beginPath(); c.arc(e[0], e[1], D * 1.64, 0, Math.PI * 2); c.stroke();
     } else {
-      c.fillStyle = '#e53935'; c.beginPath(); c.arc(e[0], e[1], 15, 0, Math.PI * 2); c.fill();
-      c.fillStyle = '#fff'; c.fillRect(e[0] - 6, e[1] - 6, 12, 12);
+      c.fillStyle = '#e53935'; c.beginPath(); c.arc(e[0], e[1], D * 1.07, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#fff'; c.fillRect(e[0] - D * .43, e[1] - D * .43, D * .86, D * .86);
     }
   });
 }
-function initDraw(){
+function initDraw(P){
   need = []; got = 0; sn = []; sg = []; ends = [];
-  STROKES[S.wn].forEach(function(s, si){
-    var pts = s.map(px);
+  P.forEach(function(pts, si){
     var ep = pts[pts.length - 1];
     ends.push({x: ep[0], y: ep[1], hit: false});
     sn.push(0); sg.push(0);
@@ -951,6 +961,7 @@ function initDraw(){
     }
   });
   var cv = document.getElementById('cd'), c = cv.getContext('2d'), last = null, down = false;
+  var R2 = wOpt.r2, BW = wOpt.bw, D = wOpt.dot;
   function pos(e){
     var r = cv.getBoundingClientRect();
     return [(e.clientX - r.left) * CW / r.width, (e.clientY - r.top) * CW / r.height];
@@ -958,15 +969,15 @@ function initDraw(){
   function mark(x, y){
     for (var i = 0; i < need.length; i++) {
       var p = need[i];
-      if (!p.c && (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y) < 900) { p.c = true; got++; sg[p.s]++; }
+      if (!p.c && (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y) < R2) { p.c = true; got++; sg[p.s]++; }
     }
     for (var m = 0; m < ends.length; m++) {
       var en = ends[m];
-      if (!en.hit && sg[m] >= sn[m] * 0.75 && (en.x - x) * (en.x - x) + (en.y - y) * (en.y - y) < 900) {
+      if (!en.hit && sg[m] >= sn[m] * 0.75 && (en.x - x) * (en.x - x) + (en.y - y) * (en.y - y) < R2) {
         en.hit = true;
-        c.fillStyle = '#43a047'; c.beginPath(); c.arc(en.x, en.y, 17, 0, Math.PI * 2); c.fill();
-        c.strokeStyle = '#fff'; c.lineWidth = 5; c.lineCap = 'round'; c.lineJoin = 'round';
-        c.beginPath(); c.moveTo(en.x - 7, en.y); c.lineTo(en.x - 2, en.y + 6); c.lineTo(en.x + 8, en.y - 6); c.stroke();
+        c.fillStyle = '#43a047'; c.beginPath(); c.arc(en.x, en.y, D * 1.2, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = '#fff'; c.lineWidth = Math.max(3, D * .36); c.lineCap = 'round'; c.lineJoin = 'round';
+        c.beginPath(); c.moveTo(en.x - D * .5, en.y); c.lineTo(en.x - D * .14, en.y + D * .43); c.lineTo(en.x + D * .57, en.y - D * .43); c.stroke();
         sfx.tap();
       }
     }
@@ -981,14 +992,15 @@ function initDraw(){
     e.preventDefault(); ctx();
     down = true; last = pos(e);
     try { cv.setPointerCapture(e.pointerId); } catch (x) {}
-    c.fillStyle = '#ff7043'; c.beginPath(); c.arc(last[0], last[1], 13, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#ff7043'; c.beginPath(); c.arc(last[0], last[1], BW / 2, 0, Math.PI * 2); c.fill();
     mark(last[0], last[1]);
+    wCheck();
   };
   cv.onpointermove = function(e){
     if (!down || S.wdone) return;
     e.preventDefault();
     var p = pos(e);
-    c.strokeStyle = '#ff7043'; c.lineWidth = 26; c.lineCap = 'round';
+    c.strokeStyle = '#ff7043'; c.lineWidth = BW; c.lineCap = 'round';
     c.beginPath(); c.moveTo(last[0], last[1]); c.lineTo(p[0], p[1]); c.stroke();
     seg(last, p); last = p;
     wCheck();
@@ -998,20 +1010,20 @@ function initDraw(){
 function wCheck(){
   if (S.wdone || !need.length) return;
   var allEnds = ends.every(function(e){ return e.hit; });
-  if (got / need.length >= 0.85 && allEnds) {
-    S.wdone = true; S.total++;
-    var n = S.wn;
-    sfx.good(); confetti(26);
-    var b = document.getElementById('wbtns');
-    if (b) b.innerHTML =
-      (n < 10 ? '<button class="cta" style="background:#43a047" onclick="writeStart(' + (n + 1) + ')">➡️</button>' : '') +
-      '<button class="cta" style="background:#29b6f6" onclick="writeStart(' + n + ')">🔁</button>' +
-      '<button class="cta" style="background:#ff7043" onclick="writePick()">🏠</button>';
-    setTimeout(function(){ say(rnd(PRAISE) + ' Con viết số ' + NUM[n] + ' thật đẹp!'); }, 500);
-  }
+  if (!(got / need.length >= 0.85 && allEnds)) return;
+  S.wdone = true; S.total++;
+  sfx.good(); confetti(26);
+  if (S.mode === 'tw') return twDone();
+  var n = S.wn;
+  var b = document.getElementById('wbtns');
+  if (b) b.innerHTML =
+    (n < 10 ? '<button class="cta" style="background:#43a047" onclick="writeStart(' + (n + 1) + ')">➡️</button>' : '') +
+    '<button class="cta" style="background:#29b6f6" onclick="writeStart(' + n + ')">🔁</button>' +
+    '<button class="cta" style="background:#ff7043" onclick="writePick()">🏠</button>';
+  setTimeout(function(){ say(rnd(PRAISE) + ' Con viết số ' + NUM[n] + ' thật đẹp!'); }, 500);
 }
 function wClear(){
-  if (S.mode !== 'write') return;
+  if (S.mode !== 'write' && S.mode !== 'tw') return;
   sfx.tap();
   var cv = document.getElementById('cd');
   cv.getContext('2d').clearRect(0, 0, CW, CW);
@@ -1020,30 +1032,131 @@ function wClear(){
   got = 0; S.wdone = false;
 }
 
-
-/* ---------- Tập viết chữ: chữ cái, dấu thanh, chữ đơn ---------- */
+/* ---------- Tập viết chữ: chữ cái, dấu thanh, chữ đơn (tự vẽ nét) ---------- */
 var TW_LET = [['a','a'],['ă','a mũ ngược'],['â','a mũ'],['b','bờ'],['c','cờ'],['d','dờ'],['đ','đờ'],['e','e'],['ê','e mũ'],['g','gờ'],['h','hờ'],['i','i'],['k','ca'],['l','lờ'],['m','mờ'],['n','nờ'],['o','o'],['ô','o mũ'],['ơ','o móc'],['p','pờ'],['q','cu'],['r','rờ'],['s','sờ'],['t','tờ'],['u','u'],['ư','u móc'],['v','vờ'],['x','xờ'],['y','y']];
 var TW_TONE = [['à','huyền'],['á','sắc'],['ả','hỏi'],['ã','ngã'],['ạ','nặng']];
 var TW_WORD = [['mẹ','👩'],['ba','👨'],['bà','👵'],['ông','👴'],['bé','👶'],['mèo','🐱'],['chó','🐶'],['gà','🐔'],['cá','🐟'],['bò','🐮'],
   ['nhà','🏠'],['xe','🚗'],['hoa','🌸'],['bánh','🍰'],['sách','📖'],['bóng','⚽'],['trăng','🌙'],['sao','⭐'],['mưa','🌧️'],['cây','🌳']];
-var TW_FONT = '700 {size}px Quicksand,"Baloo 2",Nunito,system-ui,sans-serif';
-var TWS = {sec: null, idx: 0, items: []};
-var tneed = [], tgot = 0, tcn = [], tcg = [];
 
+/* Nét chữ theo ô ly: đỉnh chữ cao y=0, đỉnh chữ thấp y=26, đường kẻ y=70, đuôi chữ y=98. Mỗi nét là một dãy điểm, điểm đầu = chấm xanh, điểm cuối = chấm đỏ. */
+function bowlL(){ return arc(17, 48, 15, 22, -45, -405); }
+var LW = {}, UW = {};
+function mkCirc(cx, y){ return [[cx - 8, y + 9], [cx, y], [cx + 8, y + 9]]; }
+function mkBreve(cx, y){ return arc(cx, y, 8, 5, 165, 15); }
+LW.o = {w: 34, cx: 17, st: [bowlL()]};
+LW.b = {w: 34, cx: 17, st: [[[3, 0], [3, 70]], arc(18, 48, 15, 22, 180, 540)]};
+LW.c = {w: 32, cx: 17, st: [arc(18, 48, 15, 22, -40, -320)]};
+LW.a = {w: 34, cx: 17, st: [bowlL(), [[32, 26], [32, 70]]]};
+LW['ă'] = {w: 34, cx: 17, top: 1, st: [bowlL(), [[32, 26], [32, 70]], mkBreve(17, 10)]};
+LW['â'] = {w: 34, cx: 17, top: 1, st: [bowlL(), [[32, 26], [32, 70]], mkCirc(17, 8)]};
+LW.d = {w: 34, cx: 17, st: [bowlL(), [[32, 0], [32, 70]]]};
+LW['đ'] = {w: 42, cx: 17, st: [bowlL(), [[32, 0], [32, 70]], [[22, 12], [42, 12]]]};
+LW.e = {w: 34, cx: 17, st: [[[3, 48], [32, 48]].concat(arc(17.5, 48, 15, 22, 0, -320))]};
+LW['ê'] = {w: 34, cx: 17, top: 1, st: [[[3, 48], [32, 48]].concat(arc(17.5, 48, 15, 22, 0, -320)), mkCirc(17, 8)]};
+LW.g = {w: 34, cx: 17, st: [bowlL(), [[32, 26], [32, 88]].concat(arc(21, 88, 11, 10, 0, 150))]};
+LW.h = {w: 36, cx: 18, st: [[[3, 0], [3, 70]], arc(18, 46, 15, 20, 180, 360).concat([[33, 46], [33, 70]])]};
+LW.i = {w: 16, cx: 8, st: [[[8, 26], [8, 70]], [[8, 12], [8.2, 12.5]]]};
+LW.k = {w: 34, cx: 17, st: [[[3, 0], [3, 70]], [[30, 28], [4, 50]], [[14, 43], [32, 70]]]};
+LW.l = {w: 20, cx: 8, st: [[[8, 0], [8, 62], [11, 68], [17, 70]]]};
+LW.m = {w: 52, cx: 26, st: [[[3, 26], [3, 70]], arc(14.5, 46, 11.5, 20, 180, 360).concat([[26, 46], [26, 70]]), arc(37.5, 46, 11.5, 20, 180, 360).concat([[49, 46], [49, 70]])]};
+LW.n = {w: 35, cx: 17, st: [[[3, 26], [3, 70]], arc(17.5, 46, 14.5, 20, 180, 360).concat([[32, 46], [32, 70]])]};
+LW['ô'] = {w: 34, cx: 17, top: 1, st: [bowlL(), mkCirc(17, 8)]};
+LW['ơ'] = {w: 42, cx: 17, st: [bowlL(), [[30, 32], [36, 30], [40, 24], [39, 18]]]};
+LW.p = {w: 34, cx: 17, st: [[[3, 26], [3, 98]], arc(18, 48, 15, 22, 180, 540)]};
+LW.q = {w: 34, cx: 17, st: [bowlL(), [[32, 26], [32, 98]]]};
+LW.r = {w: 26, cx: 13, st: [[[3, 26], [3, 70]], arc(13, 44, 10, 16, 180, 300)]};
+LW.s = {w: 34, cx: 17, st: [[[28, 32], [22, 27], [14, 26], [8, 30], [8, 38], [16, 46], [24, 52], [28, 60], [24, 68], [14, 70], [6, 66]]]};
+LW.t = {w: 26, cx: 12, st: [[[12, 6], [12, 62], [14, 68], [22, 70]], [[3, 30], [22, 30]]]};
+LW.u = {w: 36, cx: 18, st: [[[3, 26], [3, 52]].concat(arc(18, 52, 15, 18, 180, 0)), [[33, 26], [33, 70]]]};
+LW['ư'] = {w: 44, cx: 18, st: [[[3, 26], [3, 52]].concat(arc(18, 52, 15, 18, 180, 0)), [[33, 26], [33, 70]], [[33, 38], [39, 36], [42, 30], [41, 24]]]};
+LW.v = {w: 36, cx: 18, st: [[[3, 26], [18, 70], [33, 26]]]};
+LW.x = {w: 36, cx: 18, st: [[[4, 26], [32, 70]], [[32, 26], [4, 70]]]};
+LW.y = {w: 36, cx: 18, st: [[[3, 26], [3, 50]].concat(arc(18, 50, 15, 18, 180, 0)), [[33, 26], [33, 88]].concat(arc(22, 88, 11, 10, 0, 150))]};
+
+function capD(ox){ return [[ox, 0], [ox + 16, 0]].concat(arc(ox + 16, 35, 22, 35, -90, 90)).concat([[ox + 16, 70], [ox, 70]]); }
+function capP(){ return [[4, 0], [22, 0]].concat(arc(22, 19, 15, 19, -90, 90)).concat([[22, 38], [4, 38]]); }
+function capO(){ return arc(24, 35, 22, 35, -45, -405); }
+function capE(){ return [[34, 0], [4, 0], [4, 70], [34, 70]]; }
+function capU(){ return [[4, 0], [4, 48]].concat(arc(22, 48, 18, 22, 180, 0)).concat([[40, 48], [40, 0]]); }
+function capA(){ return [[[4, 70], [22, 0], [40, 70]], [[11, 48], [33, 48]]]; }
+UW.A = {w: 44, cx: 22, st: capA()};
+UW['Ă'] = {w: 44, cx: 22, top: 1, st: capA().concat([arc(22, -8, 8, 5, 165, 15)])};
+UW['Â'] = {w: 44, cx: 22, top: 1, st: capA().concat([mkCirc(22, -14)])};
+UW.B = {w: 42, cx: 21, st: [[[4, 0], [4, 70]], [[4, 0], [21, 0]].concat(arc(21, 17, 14, 17, -90, 90)).concat([[21, 34], [4, 34]]), [[4, 36], [24, 36]].concat(arc(24, 53, 15, 17, -90, 90)).concat([[24, 70], [4, 70]])]};
+UW.C = {w: 48, cx: 24, st: [arc(26, 35, 23, 35, -40, -320)]};
+UW.D = {w: 46, cx: 23, st: [[[4, 0], [4, 70]], capD(4)]};
+UW['Đ'] = {w: 50, cx: 25, st: [[[8, 0], [8, 70]], capD(8), [[0, 35], [20, 35]]]};
+UW.E = {w: 38, cx: 19, st: [capE(), [[4, 35], [28, 35]]]};
+UW['Ê'] = {w: 38, cx: 19, top: 1, st: [capE(), [[4, 35], [28, 35]], mkCirc(19, -14)]};
+UW.G = {w: 48, cx: 24, st: [arc(26, 35, 23, 35, -40, -320).concat([[44, 42], [28, 42]])]};
+UW.H = {w: 40, cx: 20, st: [[[4, 0], [4, 70]], [[36, 0], [36, 70]], [[4, 35], [36, 35]]]};
+UW.I = {w: 20, cx: 10, st: [[[10, 0], [10, 70]]]};
+UW.K = {w: 40, cx: 20, st: [[[4, 0], [4, 70]], [[36, 0], [4, 38]], [[16, 26], [38, 70]]]};
+UW.L = {w: 36, cx: 18, st: [[[4, 0], [4, 70], [32, 70]]]};
+UW.M = {w: 48, cx: 24, st: [[[4, 70], [4, 0], [24, 48], [44, 0], [44, 70]]]};
+UW.N = {w: 42, cx: 21, st: [[[4, 70], [4, 0], [38, 70], [38, 0]]]};
+UW.O = {w: 48, cx: 24, st: [capO()]};
+UW['Ô'] = {w: 48, cx: 24, top: 1, st: [capO(), mkCirc(24, -14)]};
+UW['Ơ'] = {w: 54, cx: 24, st: [capO(), [[38, 8], [45, 6], [49, 0], [48, -7]]]};
+UW.P = {w: 40, cx: 20, st: [[[4, 0], [4, 70]], capP()]};
+UW.Q = {w: 52, cx: 24, st: [capO(), [[30, 52], [48, 74]]]};
+UW.R = {w: 42, cx: 21, st: [[[4, 0], [4, 70]], capP(), [[20, 38], [38, 70]]]};
+UW.S = {w: 42, cx: 21, st: [[[36, 10], [30, 3], [20, 0], [10, 4], [6, 14], [12, 24], [24, 34], [34, 44], [36, 56], [30, 66], [20, 70], [10, 68], [4, 60]]]};
+UW.T = {w: 42, cx: 21, st: [[[2, 0], [40, 0]], [[21, 0], [21, 70]]]};
+UW.U = {w: 44, cx: 22, st: [capU()]};
+UW['Ư'] = {w: 52, cx: 22, st: [capU(), [[40, 24], [46, 22], [49, 14], [47, 6]]]};
+UW.V = {w: 44, cx: 22, st: [[[2, 0], [22, 70], [42, 0]]]};
+UW.X = {w: 42, cx: 21, st: [[[3, 0], [39, 70]], [[39, 0], [3, 70]]]};
+UW.Y = {w: 42, cx: 21, st: [[[2, 0], [21, 36], [40, 0]], [[21, 36], [21, 70]]]};
+
+/* dấu thanh (tọa độ so với tâm chữ). sắc: xiên phải từ dưới lên; huyền: xiên trái từ trên xuống */
+var TONE = {
+  '́': [[[-4, 24], [5, 9]]],
+  '̀': [[[-5, 9], [4, 24]]],
+  '̉': [[[-4, 15], [-3, 10], [1, 8], [5, 11], [3, 16], [0, 19], [0, 24]]],
+  '̃': [[[-8, 18], [-4, 10], [0, 15], [4, 20], [8, 12]]],
+  '̣': [[[0, 78], [0.2, 79]]]
+};
+function twLayout(txt, up){
+  var x = 0, st = [], gap = 8;
+  txt.split('').forEach(function(ch){
+    var d = ch.normalize('NFD'), base = d.charAt(0), shape = base, tone = null;
+    for (var i = 1; i < d.length; i++) {
+      var m = d.charAt(i);
+      if (m === '̆' || m === '̂' || m === '̛') shape = (base + m).normalize('NFC');
+      else tone = m;
+    }
+    var g = (up ? UW : LW)[shape];
+    if (!g) return;
+    g.st.forEach(function(s){ st.push(s.map(function(q){ return [x + q[0], q[1]]; })); });
+    if (tone && TONE[tone]) {
+      var dx = g.cx, dy = 0;
+      if (tone !== '̣' && g.top) { dx += 9; dy = -16; }
+      TONE[tone].forEach(function(s){ st.push(s.map(function(q){ return [x + dx + q[0], q[1] + dy]; })); });
+    }
+    x += g.w + gap;
+  });
+  var minX = 1e9, maxX = -1e9;
+  st.forEach(function(s){ s.forEach(function(q){ if (q[0] < minX) minX = q[0]; if (q[0] > maxX) maxX = q[0]; }); });
+  var sc = Math.min(340 / 120, 360 / Math.max(1, maxX - minX)), mx = (minX + maxX) / 2;
+  var P = st.map(function(s){ return s.map(function(q){ return [200 + (q[0] - mx) * sc, 200 + (q[1] - 42) * sc]; }); });
+  return {P: P, sc: sc};
+}
 function twItems(sec){
   var a = [];
   if (sec === 'letters') TW_LET.forEach(function(x){
-    a.push({txt: x[0], title: 'Chữ ' + x[0] + ' thường', name: x[1], say: 'Con hãy tô chữ ' + x[1] + ', viết thường, bắt đầu từ chấm xanh nhé.'});
-    a.push({txt: x[0].toUpperCase(), title: 'Chữ ' + x[0].toUpperCase() + ' hoa', name: x[1], say: 'Con hãy tô chữ ' + x[1] + ', viết hoa, bắt đầu từ chấm xanh nhé.'});
+    a.push({txt: x[0], up: false, title: 'Chữ ' + x[0] + ' thường', name: 'chữ ' + x[1], say: 'Con hãy tô chữ ' + x[1] + ', viết thường, bắt đầu từ chấm xanh và dừng ở chấm đỏ nhé.'});
+    a.push({txt: x[0].toUpperCase(), up: true, title: 'Chữ ' + x[0].toUpperCase() + ' hoa', name: 'chữ ' + x[1] + ' viết hoa', say: 'Con hãy tô chữ ' + x[1] + ', viết hoa, bắt đầu từ chấm xanh và dừng ở chấm đỏ nhé.'});
   });
   else if (sec === 'tones') TW_TONE.forEach(function(x){
-    a.push({txt: x[0], title: 'Dấu ' + x[1], name: 'dấu ' + x[1], say: 'Dấu ' + x[1] + '. Con hãy tô chữ a có dấu ' + x[1] + ' nhé.'});
+    a.push({txt: x[0], up: false, title: 'Dấu ' + x[1], name: 'dấu ' + x[1], say: 'Dấu ' + x[1] + '. Con hãy tô chữ a có dấu ' + x[1] + ' nhé.'});
   });
   else TW_WORD.forEach(function(x){
-    a.push({txt: x[0], e: x[1], title: x[0], name: 'chữ ' + x[0], say: 'Con hãy tô chữ ' + x[0] + ' nhé.', word: true});
+    a.push({txt: x[0], up: false, e: x[1], title: x[0], name: 'chữ ' + x[0], say: 'Con hãy tô chữ ' + x[0] + ', bắt đầu từ chấm xanh và dừng ở chấm đỏ nhé.', word: true});
   });
   return a;
 }
+var TWS = {sec: null, idx: 0, items: []};
 function twMenu(){
   S.mode = null; S.token++; S.wdone = true; stopSpeech();
   app.innerHTML =
@@ -1077,75 +1190,6 @@ function twGroup(sec){
     '<div class="bar"><button class="ib" onclick="twMenu()">⬅️</button><div class="title">' + title + '</div><span style="width:56px"></span></div>' +
     '<div class="menu" style="grid-template-columns:' + grid + ';gap:10px;align-content:start;overflow-y:auto">' + g + '</div>';
 }
-function twReady(cb){
-  var done = false;
-  function go(){ if (!done) { done = true; cb(); } }
-  try {
-    if (document.fonts && document.fonts.load) {
-      document.fonts.load('700 100px Quicksand', 'aăâbcdđeêghiklmnoôơpqrstuưvxy áàảãạ').then(go, go);
-      setTimeout(go, 1500);
-    } else go();
-  } catch (e) { go(); }
-}
-function twRender(it){
-  var cv = document.createElement('canvas'); cv.width = 400; cv.height = 400;
-  var c = cv.getContext('2d'), size = 300, by = 300;
-  if (it.word) {
-    c.font = TW_FONT.replace('{size}', '100');
-    var w = c.measureText(it.txt).width || 100;
-    size = Math.min(260, 340 / w * 100);
-    by = 200 + size * 0.3;
-  }
-  c.font = TW_FONT.replace('{size}', Math.round(size));
-  c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.fillStyle = '#000';
-  c.fillText(it.txt, 200, by);
-  return {cv: cv, size: size, by: by};
-}
-function twSkeleton(cv){
-  var W = 200, H = 200, s = document.createElement('canvas'); s.width = W; s.height = H;
-  var sc = s.getContext('2d'); sc.drawImage(cv, 0, 0, W, H);
-  var d = sc.getImageData(0, 0, W, H).data, g = new Uint8Array(W * H), i, k;
-  for (i = 0; i < W * H; i++) g[i] = d[i * 4 + 3] > 110 ? 1 : 0;
-  var changed = true, iter = 0, p = new Array(8);
-  while (changed && iter < 80) {
-    changed = false; iter++;
-    for (var pass = 0; pass < 2; pass++) {
-      var del = [];
-      for (var y = 1; y < H - 1; y++) for (var x = 1; x < W - 1; x++) {
-        i = y * W + x;
-        if (!g[i]) continue;
-        p[0] = g[i - W]; p[1] = g[i - W + 1]; p[2] = g[i + 1]; p[3] = g[i + W + 1]; p[4] = g[i + W]; p[5] = g[i + W - 1]; p[6] = g[i - 1]; p[7] = g[i - W - 1];
-        var B = 0, A = 0;
-        for (k = 0; k < 8; k++) { B += p[k]; if (p[k] === 0 && p[(k + 1) & 7] === 1) A++; }
-        if (B < 2 || B > 6 || A !== 1) continue;
-        if (pass === 0) { if (p[0] * p[2] * p[4] !== 0 || p[2] * p[4] * p[6] !== 0) continue; }
-        else { if (p[0] * p[2] * p[6] !== 0 || p[0] * p[4] * p[6] !== 0) continue; }
-        del.push(i);
-      }
-      if (del.length) { changed = true; for (k = 0; k < del.length; k++) g[del[k]] = 0; }
-    }
-  }
-  /* tách thành các thành phần liên thông, lấy mẫu mỗi ~8px */
-  var seen = new Uint8Array(W * H), comps = [];
-  for (i = 0; i < W * H; i++) {
-    if (!g[i] || seen[i]) continue;
-    var stack = [i], pts = {}, list = [];
-    seen[i] = 1;
-    while (stack.length) {
-      var j = stack.pop(), jx = j % W, jy = (j / W) | 0;
-      var key = ((jx / 4) | 0) + ',' + ((jy / 4) | 0);
-      if (!pts[key]) { pts[key] = 1; list.push([jx * 2 + 1, jy * 2 + 1]); }
-      for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
-        var nx = jx + dx, ny = jy + dy;
-        if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
-        var nj = ny * W + nx;
-        if (g[nj] && !seen[nj]) { seen[nj] = 1; stack.push(nj); }
-      }
-    }
-    comps.push(list);
-  }
-  return comps;
-}
 function twStart(sec, idx){
   var items = twItems(sec), it = items[idx];
   S.mode = 'tw'; S.token++; S.wdone = false;
@@ -1154,91 +1198,28 @@ function twStart(sec, idx){
   app.innerHTML =
     '<div class="top"><button class="ib" onclick="twGroup(\'' + sec + '\')">⬅️</button>' + chip + '<button class="ib" onclick="twReplay()">🔊</button></div>' +
     '<div class="stage"><div class="wrap"><canvas id="cg" width="400" height="400"></canvas><canvas id="cd" width="400" height="400"></canvas></div></div>' +
-    '<div class="row" id="wbtns"><button class="cta" style="background:#29b6f6" onclick="twClear()">🧽</button></div>';
+    '<div class="row" id="wbtns"><button class="cta" style="background:#29b6f6" onclick="wClear()">🧽</button></div>';
+  var L = twLayout(it.txt, it.up), f = Math.max(.5, Math.min(1, L.sc / 2.83));
+  var yy = function(u){ return 200 + (u - 42) * L.sc; };
+  wOpt = {lw: 24 * Math.max(.6, f), dot: 11 * Math.max(.75, f), r2: Math.pow(28 * Math.max(.7, f), 2), bw: 24 * Math.max(.75, f),
+    lines: [{y: yy(0), c: '#dcecf7'}, {y: yy(26), c: '#dcecf7'}, {y: yy(70), c: '#9ecbe8'}]};
+  drawGuide(L.P);
+  initDraw(L.P);
   var tk = S.token;
-  twReady(function(){
-    if (tk !== S.token) return;
-    twSetup(it);
-  });
   setTimeout(function(){ if (tk === S.token && !S.wdone) say(it.say); }, 300);
 }
 function twReplay(){
   if (S.mode !== 'tw') return;
   sfx.tap(); say(TWS.items[TWS.idx].say);
 }
-function twSetup(it){
-  var r = twRender(it), comps = twSkeleton(r.cv);
-  tneed = []; tgot = 0; tcn = []; tcg = [];
-  comps.forEach(function(list, k){
-    tcn.push(list.length); tcg.push(0);
-    list.forEach(function(q){ tneed.push({x: q[0], y: q[1], c: false, k: k}); });
-  });
-  var g = document.getElementById('cg').getContext('2d');
-  g.clearRect(0, 0, 400, 400);
-  g.font = TW_FONT.replace('{size}', Math.round(r.size)); g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-  g.fillStyle = '#efe6d2'; g.fillText(it.txt, 200, r.by);
-  g.fillStyle = '#cbbf9f';
-  tneed.forEach(function(q){ g.beginPath(); g.arc(q.x, q.y, 2.6, 0, Math.PI * 2); g.fill(); });
-  var st = null;
-  tneed.forEach(function(q){ if (!st || q.x + q.y < st.x + st.y) st = q; });
-  if (st) { g.fillStyle = '#43a047'; g.beginPath(); g.arc(st.x, st.y, 14, 0, Math.PI * 2); g.fill(); }
-  var R2 = it.word ? 26 * 26 : 32 * 32;
-  var cv = document.getElementById('cd'), c = cv.getContext('2d'), last = null, down = false;
-  function pos(e){
-    var b = cv.getBoundingClientRect();
-    return [(e.clientX - b.left) * 400 / b.width, (e.clientY - b.top) * 400 / b.height];
-  }
-  function mark(x, y){
-    for (var i = 0; i < tneed.length; i++) {
-      var q = tneed[i];
-      if (!q.c && (q.x - x) * (q.x - x) + (q.y - y) * (q.y - y) < R2) { q.c = true; tgot++; tcg[q.k]++; }
-    }
-  }
-  function seg(a, b){
-    var d = Math.sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]));
-    var k = Math.max(1, Math.ceil(d / 6));
-    for (var j = 1; j <= k; j++) mark(a[0] + (b[0] - a[0]) * j / k, a[1] + (b[1] - a[1]) * j / k);
-  }
-  cv.onpointerdown = function(e){
-    if (S.wdone) return;
-    e.preventDefault(); ctx();
-    down = true; last = pos(e);
-    try { cv.setPointerCapture(e.pointerId); } catch (x) {}
-    c.fillStyle = '#ff7043'; c.beginPath(); c.arc(last[0], last[1], 13, 0, Math.PI * 2); c.fill();
-    mark(last[0], last[1]);
-  };
-  cv.onpointermove = function(e){
-    if (!down || S.wdone) return;
-    e.preventDefault();
-    var p = pos(e);
-    c.strokeStyle = '#ff7043'; c.lineWidth = 26; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(last[0], last[1]); c.lineTo(p[0], p[1]); c.stroke();
-    seg(last, p); last = p;
-    twCheck();
-  };
-  cv.onpointerup = cv.onpointercancel = function(){ down = false; twCheck(); };
-}
-function twCheck(){
-  if (S.wdone || S.mode !== 'tw' || !tneed.length) return;
-  if (tgot / tneed.length < 0.85) return;
-  for (var k = 0; k < tcn.length; k++) if (tcg[k] < Math.ceil(tcn[k] * 0.8)) return;
-  S.wdone = true; S.total++;
+function twDone(){
   var it = TWS.items[TWS.idx], last = TWS.idx >= TWS.items.length - 1;
-  sfx.good(); confetti(26);
   var b = document.getElementById('wbtns');
   if (b) b.innerHTML =
     (!last ? '<button class="cta" style="background:#43a047" onclick="twStart(\'' + TWS.sec + '\',' + (TWS.idx + 1) + ')">➡️</button>' : '') +
     '<button class="cta" style="background:#29b6f6" onclick="twStart(\'' + TWS.sec + '\',' + TWS.idx + ')">🔁</button>' +
     '<button class="cta" style="background:#ff7043" onclick="twGroup(\'' + TWS.sec + '\')">🏠</button>';
   setTimeout(function(){ say(rnd(PRAISE) + ' Con viết ' + it.name + ' thật đẹp!'); }, 500);
-}
-function twClear(){
-  if (S.mode !== 'tw') return;
-  sfx.tap();
-  document.getElementById('cd').getContext('2d').clearRect(0, 0, 400, 400);
-  tneed.forEach(function(q){ q.c = false; });
-  tcg = tcg.map(function(){ return 0; });
-  tgot = 0; S.wdone = false;
 }
 
 /* ---------- English: menu, học (Learn) ---------- */
